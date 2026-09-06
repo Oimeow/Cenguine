@@ -72,6 +72,23 @@ std::vector<uint32_t> cullBackFaces(Object& obj, Transform3D& tCamera, const std
     return frontFacingTriIdxs;
 }
 
+std::vector<uint32_t> cullBackFacesScreen(Object& obj, const std::vector<Point2D>& projVs) {
+    std::vector<uint32_t> frontFacingTriIdxs;
+
+    for (size_t i = 0; i < obj.meshRenderer.triangles.size(); i++) {
+        Tri& tri = obj.meshRenderer.triangles[i];
+        Point2D a = projVs[tri[0]], b = projVs[tri[1]], c = projVs[tri[2]];
+
+        int signed2DArea = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+
+        if (signed2DArea > 0) {  // CCW
+            frontFacingTriIdxs.emplace_back(i);
+        }
+    }
+
+    return frontFacingTriIdxs;
+}
+
 void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t>& visibleTris, const std::vector<Point2D>& projVs) {
     const int width = d.W();
     const int height = d.H();

@@ -80,11 +80,11 @@ int shaders(Display &d, Transform3D& tCamera, std::vector<Object>& objs) {
             projVs[i] = project(worldVs[i], width, height, fproj);
         }
 
-        std::vector<uint32_t> visibleTris = cullBackFaces(o, tCamera, worldVs);
-        
+        // std::vector<uint32_t> visibleTris = cullBackFaces(o, tCamera, worldVs);
+        std::vector<uint32_t> visibleTris = cullBackFacesScreen(o, projVs);
 
-        // std::cout << "visible: " << visibleTris.size()
-        //   << " / " << o.meshRenderer.triangles.size() << '\n';
+        std::cout << "visible: " << visibleTris.size()
+          << " / " << o.meshRenderer.triangles.size() << '\n';
 
         // wireframeRenderBFC(d, o, visibleTris, vs);
         rasterizeFill(d, o, visibleTris, projVs);
