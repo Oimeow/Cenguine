@@ -39,9 +39,18 @@ struct Transform3D {
     {}
 };
 
+struct Projection {
+    float f;
+};
 
 // helper functions
 
-inline bool rightOfEdgeAB(Point2D a, Point2D b, Point2D p) {
-    return (p.x-a.x) * (b.y-a.y) >= (p.y-a.y) * (b.x-a.x);
+inline int edgeFunction(Point2D a, Point2D b, Point2D p) {
+    return (p.x-a.x) * (b.y-a.y) - (p.y-a.y) * (b.x-a.x);
 }
+
+Projection fov_to_f(int height, float fov);
+
+Point2D project(const glm::vec3& v, const int w, const int h, const float fov, float clippingPlane=0.01f);
+
+Point2D project(const glm::vec3& v, const int w, const int h, const Projection& projection, float clippingPlane=0.01f);

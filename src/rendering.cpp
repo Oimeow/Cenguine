@@ -5,17 +5,6 @@
 #include <algorithm>
 
 
-Point2D project(const glm::vec3& v, int w, int h, float fov, float clippingPlane) {
-    if (v.z <= clippingPlane) {
-        return {0,0,v.z};
-    }
-
-    float f = 0.5f*h / glm::tan(0.5f * glm::radians(fov));
-    int xf = int(0.5f * w + v.x * f / v.z);
-    int yf = int(0.5f * h - v.y * f / v.z);
-
-    return {xf, yf, v.z};
-}
 
 void testShader(Display &d) {
     uint32_t width = d.W(), height = d.H();
@@ -84,34 +73,43 @@ std::vector<uint32_t> cullBackFaces(Object& obj, Transform3D& tCamera, const std
 }
 
 void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t>& visibleTris, Transform3D& tCamera, const std::vector<glm::vec3>& wvs) {
+    const int width = d.W();
+    const int height = d.H();
+    uint32_t* framebuffer = d.data();
+    
+    Projection f = fov_to_f(height, 90.0f);
+
     for (uint32_t i : visibleTris) {
-        Tri tri = obj.meshRenderer.triangles[i];
+        Tri& tri = obj.meshRenderer.triangles[i];
         glm::vec3 v1 = wvs[tri[0]], v2 = wvs[tri[1]], v3 = wvs[tri[2]];
 
-        Point2D p1 = project(v1, d.W(), d.H(), 90.0f);
-        Point2D p2 = project(v2, d.W(), d.H(), 90.0f);
-        Point2D p3 = project(v3, d.W(), d.H(), 90.0f);
+        Point2D p1 = project(v1, width, height, f);
+        Point2D p2 = project(v2, width, height, f);
+        Point2D p3 = project(v3, width, height, f);
 
         int min_x = std::max(std::min({p1.x, p2.x, p3.x}), 0);
-        int max_x = std::min(std::max({p1.x, p2.x, p3.x}), int(d.W() - 1));
+        int max_x = std::min(std::max({p1.x, p2.x, p3.x}), width - 1);
 
         int min_y = std::max(std::min({p1.y, p2.y, p3.y}), 0);
-        int max_y = std::min(std::max({p1.y, p2.y, p3.y}), int(d.H() - 1));
+        int max_y = std::min(std::max({p1.y, p2.y, p3.y}), height - 1);
 
-        for (int y = min_y; y < max_y; y++) {
-            for (int x = min_x; x < max_x; x++) {
-                Point2D xy = Point2D(x,y);
-                if (!rightOfEdgeAB(p1,p2,xy) && !rightOfEdgeAB(p2,p3,xy) && !rightOfEdgeAB(p3,p1,xy)) {
-                    if (x < 0 || x >= d.W() || y < 0 || y >= d.H()) {
-                        std::cerr << "BAD PIXEL: " << x << ", " << y << "\n";
-                        abort();
-                    }
+        if (min_x > max_x || min_y > max_y)  // absurdities
+            continue;
 
-                    assert(i < obj.meshRenderer.colors.size());
-                    d.putPixel(xy, obj.meshRenderer.colors[i]);
+        for (int y = min_y; y < max_y; ++y) {
+            for (int x = min_x; x < max_x; ++x) {
+                Point2D p{x, y};
+
+                int e1 = edgeFunction(p1, p2, p);
+                int e2 = edgeFunction(p2, p3, p);
+                int e3 = edgeFunction(p3, p1, p);
+
+                if (e1 <= 0 && e2 <= 0 && e3 <= 0) {
+                    d.putPixel(p, obj.meshRenderer.colors[i]);
                 }
             }
         }
+
 
     }
 }
@@ -123,7 +121,7 @@ void wireframeRenderNaive(Display& d, Object& obj) {
     std::vector<glm::vec3> vs = obj.getWorldVerts();
 
     for (size_t i = 0; i < obj.meshRenderer.triangles.size(); i++) {
-        Tri tri = obj.meshRenderer.triangles[i];
+        Tri& tri = obj.meshRenderer.triangles[i];
 
         glm::vec3 v1 = vs[tri[0]], v2 = vs[tri[1]], v3 = vs[tri[2]];
 

@@ -13,6 +13,7 @@ add_executable(runcenguine
     src/display.cpp
     src/components.cpp
     src/rendering.cpp
+    src/utils.cpp
 )
 
 target_include_directories(runcenguine PRIVATE
