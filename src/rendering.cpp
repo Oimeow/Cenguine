@@ -94,22 +94,39 @@ void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t>& visibleTris, 
         if (min_x > max_x || min_y > max_y)  // absurdities
             continue;
 
-        for (int y = min_y; y < max_y; ++y) {
-            for (int x = min_x; x < max_x; ++x) {
-                Point2D p{x, y};
+        int e1_dx = p2.y - p1.y;
+        int e2_dx = p3.y - p2.y;
+        int e3_dx = p1.y - p3.y;
 
-                int e1 = edgeFunction(p1, p2, p);
-                int e2 = edgeFunction(p2, p3, p);
-                int e3 = edgeFunction(p3, p1, p);
+        int e1_dy = p1.x - p2.x;
+        int e2_dy = p2.x - p3.x;
+        int e3_dy = p3.x - p1.x;
 
-                if (e1 <= 0 && e2 <= 0 && e3 <= 0) {
+        Point2D start{min_x, min_y};
+
+        int e1_row = edgeFunction(p1, p2, start);
+        int e2_row = edgeFunction(p2, p3, start);
+        int e3_row = edgeFunction(p3, p1, start);
+
+        for (int y = min_y; y <= max_y; y++) {
+            int e1 = e1_row,  e2 = e2_row,  e3 = e3_row;
+
+            for (int x = min_x; x <= max_x; x++) {
+                if (e1 <= 0 && e2 <= 0 && e3 <= 0)
                     framebuffer[y*width + x] = obj.meshRenderer.colors[i];
-                    // d.putPixel(p, obj.meshRenderer.colors[i]);
-                }
+
+                // move a pixel right
+                e1 += e1_dx;
+                e2 += e2_dx;
+                e3 += e3_dx;
+                
             }
+
+            // move a pixel down
+            e1_row += e1_dy;
+            e2_row += e2_dy;
+            e3_row += e3_dy;
         }
-
-
     }
 }
 

@@ -12,14 +12,17 @@ int update(std::vector<Object>& objs);
 int shaders(Display &d, Transform3D& cameraTransform, std::vector<Object>& objs);
 
 int main() {
-    int width = 1920, height = 1080, dS = 1;
+    int width = 500, height = 500, dS = 1;
 
     InitWindow(width*dS, height*dS, "Cenguine");
     Display display(width, height, dS, 0);
 
     std::vector<Object> objs {
-        instantiate("objs/cube.obj", {0,0,5}, glm::quat({0, 1, 1}), {2,2,2}),
-        instantiate("objs/stanford-bunny.obj", {0,0,1.1}, glm::quat(), {5, 5, 5})
+        //instantiate("objs/cube.obj", {0,0,5}, glm::quat({0, 1, 1}), {2,2,2}),
+        instantiate("objs/stanford-bunny.obj",
+            {0,0,1.1},
+            glm::quat(),
+            {5,5,5})
     };
 
     Transform3D t_Camera({0,0,0}, glm::identity<glm::quat>());
@@ -37,7 +40,7 @@ int main() {
         ClearBackground(BLACK); 
         display.clear(0);   
 
-        update(objs);  // run behaviours (update)
+        //update(objs);  // run behaviours (update)
         shaders(display, t_Camera, objs);  // run shaders
 
         // push Texture2D from framebuffer
