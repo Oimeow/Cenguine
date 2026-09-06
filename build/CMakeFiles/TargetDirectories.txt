@@ -1,3 +1,0 @@
-/Users/ledger/dev/Projects/Cenguine/build/CMakeFiles/CenguineBinary.dir
-/Users/ledger/dev/Projects/Cenguine/build/CMakeFiles/edit_cache.dir
-/Users/ledger/dev/Projects/Cenguine/build/CMakeFiles/rebuild_cache.dir
