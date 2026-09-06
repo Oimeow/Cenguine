@@ -2,6 +2,8 @@
 #include <iostream>
 #include "components.hpp"
 #include "utils.hpp"
+#include <algorithm>
+
 
 Point2D project(const glm::vec3& v, int w, int h, float fov, float clippingPlane) {
     if (v.z <= clippingPlane) {
@@ -45,13 +47,11 @@ void vertexRender(Display &d, const std::vector<glm::vec3>& vs) {
     }
 }
 
-void wireframeRenderBFC(Display& d, Object& obj, std::vector<uint32_t> visibleTris={}) {
-    std::vector<glm::vec3> vs = obj.getWorldVerts();
-
+void wireframeRenderBFC(Display& d, Object& obj, std::vector<uint32_t>& visibleTris, const std::vector<glm::vec3>& wvs) {
     for (uint32_t i : visibleTris) {
         Tri tri = obj.meshRenderer.triangles[i];
 
-        glm::vec3 v1 = vs[tri[0]], v2 = vs[tri[1]], v3 = vs[tri[2]];
+        glm::vec3 v1 = wvs[tri[0]], v2 = wvs[tri[1]], v3 = wvs[tri[2]];
 
         Point2D p1 = project(v1, d.W(), d.H(), 90.0f);
         Point2D p2 = project(v2, d.W(), d.H(), 90.0f);
@@ -66,17 +66,16 @@ void wireframeRenderBFC(Display& d, Object& obj, std::vector<uint32_t> visibleTr
     }
 }
 
-std::vector<uint32_t> cullBackFaces(Object& obj, Transform3D& camera) {
-    std::vector<glm::vec3> worldVs = obj.getWorldVerts();
+std::vector<uint32_t> cullBackFaces(Object& obj, Transform3D& tCamera, const std::vector<glm::vec3>& wvs) {
     std::vector<uint32_t> frontFacingTriIdxs;
 
     for (size_t i = 0; i < obj.meshRenderer.triangles.size(); i++) {
         Tri& tri = obj.meshRenderer.triangles[i];
-        glm::vec3 a = worldVs[tri[0]], b = worldVs[tri[1]], c = worldVs[tri[2]];
+        glm::vec3 a = wvs[tri[0]], b = wvs[tri[1]], c = wvs[tri[2]];
 
         glm::vec3 normal = glm::cross(b-a, c-a);  // * -1 since left handed xyz system
 
-        if (glm::dot(normal, camera.pos - a) > 0) {
+        if (glm::dot(normal, tCamera.pos - a) > 0) {
             frontFacingTriIdxs.emplace_back(i);
         }
     }
@@ -84,8 +83,31 @@ std::vector<uint32_t> cullBackFaces(Object& obj, Transform3D& camera) {
     return frontFacingTriIdxs;
 }
 
-void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t> visibleTris) {
-    std::vector<glm::vec3> vs = obj.getWorldVerts();
+void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t>& visibleTris, Transform3D& tCamera, const std::vector<glm::vec3>& wvs) {
+    for (uint32_t i : visibleTris) {
+        Tri tri = obj.meshRenderer.triangles[i];
+        glm::vec3 v1 = wvs[tri[0]], v2 = wvs[tri[1]], v3 = wvs[tri[2]];
+
+        Point2D p1 = project(v1, d.W(), d.H(), 90.0f);
+        Point2D p2 = project(v2, d.W(), d.H(), 90.0f);
+        Point2D p3 = project(v3, d.W(), d.H(), 90.0f);
+
+        uint32_t min_x = std::max(std::min({p1.x, p2.x, p3.x}), 0);
+        uint32_t max_x = std::min(std::max({p1.x, p2.x, p3.x}), int(d.W() - 1));
+
+        uint32_t min_y = std::max(std::min({p1.y, p2.y, p3.y}), 0);
+        uint32_t max_y = std::min(std::max({p1.y, p2.y, p3.y}), int(d.H() - 1));
+
+        for (uint32_t y = min_y; y < max_y; y++) {
+            for (uint32_t x = min_x; x < max_x; x++) {
+                Point2D xy = Point2D(x,y);
+                if (!rightOfEdgeAB(p1,p2,xy) && !rightOfEdgeAB(p2,p3,xy) && !rightOfEdgeAB(p3,p1,xy)) {
+                    d.putPixel(xy, obj.meshRenderer.colors[i]);
+                }
+            }
+        }
+
+    }
 }
 
 

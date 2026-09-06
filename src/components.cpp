@@ -3,6 +3,11 @@
 #include <iostream>
 #include <sstream>
 #include "utils.hpp"
+#include "rendering.hpp"
+
+// for randomness
+#include <cstdlib>
+#include <ctime>
 
 
 FaceVertex parseFaceVertex(const std::string& face) {
@@ -53,6 +58,24 @@ std::vector<glm::vec3> Object::getWorldVerts() const {
 
 
 // class MeshRenderer
+
+void MeshRenderer::randomizeTriColors() {
+    colors.clear();
+
+    srand(time(nullptr));
+    for (size_t i = 0; i < triangles.size(); i++) {
+        uint8_t r = rand() % 256;
+        uint8_t g = rand() % 256;
+        uint8_t b = rand() % 256;
+        // std::cout << (r << 16 | g << 8 | b) << std::endl;
+        colors.push_back(i32rgba(r, g, b));
+    }
+
+    std::cout << std::endl;
+    for (auto color : colors) {
+        std::cout << color << std::endl;
+    }
+}
 
 MeshRenderer MeshRenderer::loadFromObj(std::string objFname) {
     MeshRenderer result;

@@ -38,3 +38,10 @@ struct Transform3D {
     Transform3D(glm::vec3 pos, glm::quat rot) : pos(pos), rot(rot)
     {}
 };
+
+
+// helper functions
+
+inline bool rightOfEdgeAB(Point2D a, Point2D b, Point2D p) {
+    return (p.x-a.x) * (b.y-a.y) >= (p.y-a.y) * (b.x-a.x);
+}

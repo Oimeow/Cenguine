@@ -13,7 +13,9 @@ public:
     std::vector<glm::vec3> vertices;
     std::vector<Tri> triangles;
     std::string meshName;
+    std::vector<uint32_t> colors;
 
+    void randomizeTriColors();
     static MeshRenderer loadFromObj(std::string objFname);
 
 private:
