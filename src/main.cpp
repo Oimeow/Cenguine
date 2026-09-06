@@ -12,20 +12,21 @@ int update(std::vector<Object>& objs);
 int shaders(Display &d, Transform3D& cameraTransform, std::vector<Object>& objs);
 
 int main() {
-    int width = 500, height = 500, dS = 1;
+    int width = 1920, height = 1080, dS = 1;
 
     InitWindow(width*dS, height*dS, "Cenguine");
     Display display(width, height, dS, 0);
 
     std::vector<Object> objs {
-        instantiate("objs/cube.obj", {0,0,2}, glm::quat({0, 1, 1}), {2,2,2}),
-        // instantiate("objs/stanford-bunny.obj", {0,0,1.1}, glm::quat(), {5, 5, 5})
+        instantiate("objs/cube.obj", {0,0,5}, glm::quat({0, 1, 1}), {2,2,2}),
+        instantiate("objs/stanford-bunny.obj", {0,0,1.1}, glm::quat(), {5, 5, 5})
     };
 
     Transform3D t_Camera({0,0,0}, glm::identity<glm::quat>());
 
-    objs[0].meshRenderer.randomizeTriColors();
-    // objs[1].meshRenderer.randomizeTriColors();
+    for (auto& obj : objs) {
+        obj.meshRenderer.randomizeTriColors();
+    }
 
     while (!WindowShouldClose()) {
         SetWindowTitle(TextFormat("Cenguine  |  FPS: %d", GetFPS()));
@@ -63,21 +64,27 @@ int update(std::vector<Object>& objs) {
 }
 
 int shaders(Display &d, Transform3D& tCamera, std::vector<Object>& objs) {
-    for (Object& o : objs) {
-        auto vs = o.getWorldVerts();
+    const int width = d.W();
+    const int height = d.H();
 
-        std::vector<uint32_t> visibleTris = cullBackFaces(o, tCamera, vs);
-        // visibleTris.clear();
-        // for (int i = 0; i < o.meshRenderer.triangles.size(); i++) {
-        //     visibleTris.push_back(i);
-        // }
+    Projection fproj = fov_to_f(height, 90.0f);
+
+    for (Object& o : objs) {
+        auto worldVs = o.getWorldVerts();
+
+        std::vector<Point2D> projVs(worldVs.size());
+        for (size_t i = 0; i < worldVs.size(); i++) {
+            projVs[i] = project(worldVs[i], width, height, fproj);
+        }
+
+        std::vector<uint32_t> visibleTris = cullBackFaces(o, tCamera, worldVs);
         
 
-        std::cout << "visible: " << visibleTris.size()
-          << " / " << o.meshRenderer.triangles.size() << '\n';
+        // std::cout << "visible: " << visibleTris.size()
+        //   << " / " << o.meshRenderer.triangles.size() << '\n';
 
         // wireframeRenderBFC(d, o, visibleTris, vs);
-        rasterizeFill(d, o, visibleTris, tCamera, vs);
+        rasterizeFill(d, o, visibleTris, projVs);
         // vertexRender(d, vs);
     }
 

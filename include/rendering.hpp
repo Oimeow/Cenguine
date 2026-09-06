@@ -31,7 +31,7 @@ void wireframeRenderBFC(Display &d, Object& obj, std::vector<uint32_t>& visibleT
 
 std::vector<uint32_t> cullBackFaces(Object& obj, Transform3D& tCamera, const std::vector<glm::vec3>& wvs);
 
-void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t>& visibleTris, Transform3D& tCamera, const std::vector<glm::vec3>& wvs);
+void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t>& visibleTris, const std::vector<Point2D>& projVs);
 
 
 #pragma region OLD

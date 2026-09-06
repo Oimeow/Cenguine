@@ -72,20 +72,18 @@ std::vector<uint32_t> cullBackFaces(Object& obj, Transform3D& tCamera, const std
     return frontFacingTriIdxs;
 }
 
-void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t>& visibleTris, Transform3D& tCamera, const std::vector<glm::vec3>& wvs) {
+void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t>& visibleTris, const std::vector<Point2D>& projVs) {
     const int width = d.W();
     const int height = d.H();
     uint32_t* framebuffer = d.data();
-    
-    Projection f = fov_to_f(height, 90.0f);
 
+    // rasterize
     for (uint32_t i : visibleTris) {
         Tri& tri = obj.meshRenderer.triangles[i];
-        glm::vec3 v1 = wvs[tri[0]], v2 = wvs[tri[1]], v3 = wvs[tri[2]];
 
-        Point2D p1 = project(v1, width, height, f);
-        Point2D p2 = project(v2, width, height, f);
-        Point2D p3 = project(v3, width, height, f);
+        Point2D p1 = projVs[tri[0]];
+        Point2D p2 = projVs[tri[1]];
+        Point2D p3 = projVs[tri[2]];
 
         int min_x = std::max(std::min({p1.x, p2.x, p3.x}), 0);
         int max_x = std::min(std::max({p1.x, p2.x, p3.x}), width - 1);
@@ -105,7 +103,8 @@ void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t>& visibleTris, 
                 int e3 = edgeFunction(p3, p1, p);
 
                 if (e1 <= 0 && e2 <= 0 && e3 <= 0) {
-                    d.putPixel(p, obj.meshRenderer.colors[i]);
+                    framebuffer[y*width + x] = obj.meshRenderer.colors[i];
+                    // d.putPixel(p, obj.meshRenderer.colors[i]);
                 }
             }
         }
