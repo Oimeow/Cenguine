@@ -28,7 +28,17 @@ Point2D project(const glm::vec3& v, int w, int h, float fov, float clippingPlane
 
 void testShader(Display &d);
 
-void vertexRender(Display &d, std::vector<glm::vec3>& vs);
+void vertexRender(Display &d, const std::vector<glm::vec3>& vs);
 
-void wireframeRender(Display &d, Object& obj);
+void wireframeRenderBFC(Display &d, Object& obj, std::vector<uint32_t> visibleTris);
 
+std::vector<uint32_t> cullBackFaces(Object& obj, Transform3D& camera);
+
+void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t> visibleTris);
+
+
+#pragma region OLD
+
+void wireframeRenderNaive(Display &d, Object& obj);
+
+#pragma endregion

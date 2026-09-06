@@ -1,6 +1,7 @@
 #include "rendering.hpp"
 #include <iostream>
 #include "components.hpp"
+#include "utils.hpp"
 
 Point2D project(const glm::vec3& v, int w, int h, float fov, float clippingPlane) {
     if (v.z <= clippingPlane) {
@@ -29,7 +30,7 @@ void testShader(Display &d) {
     }
 }
 
-void vertexRender(Display &d, std::vector<glm::vec3>& vs) {
+void vertexRender(Display &d, const std::vector<glm::vec3>& vs) {
     for (int i = 0; i < vs.size(); i++) {
         Point2D p = project(vs[i], d.W(), d.H(), 90.0f);  // FOV Magic number...
         // std::cout << "screen point:  (" << p.x << ", " << p.y << ")\n";
@@ -44,7 +45,53 @@ void vertexRender(Display &d, std::vector<glm::vec3>& vs) {
     }
 }
 
-void wireframeRender(Display& d, Object& obj) {
+void wireframeRenderBFC(Display& d, Object& obj, std::vector<uint32_t> visibleTris={}) {
+    std::vector<glm::vec3> vs = obj.getWorldVerts();
+
+    for (uint32_t i : visibleTris) {
+        Tri tri = obj.meshRenderer.triangles[i];
+
+        glm::vec3 v1 = vs[tri[0]], v2 = vs[tri[1]], v3 = vs[tri[2]];
+
+        Point2D p1 = project(v1, d.W(), d.H(), 90.0f);
+        Point2D p2 = project(v2, d.W(), d.H(), 90.0f);
+        Point2D p3 = project(v3, d.W(), d.H(), 90.0f);
+
+        // std::cout << "line: "  << p1.x << "," << p1.y << " -> " << p2.x << "," << p2.y << "\n";
+
+
+        if (p1.z > 0 && p2.z > 0)  d.drawBresenhamLine(p1, p2, i32rgba(0,200,0));
+        if (p3.z > 0 && p1.z > 0)  d.drawBresenhamLine(p3, p1, i32rgba(0,200,0));
+        if (p2.z > 0 && p3.z > 0)  d.drawBresenhamLine(p2, p3, i32rgba(0,200,0));
+    }
+}
+
+std::vector<uint32_t> cullBackFaces(Object& obj, Transform3D& camera) {
+    std::vector<glm::vec3> worldVs = obj.getWorldVerts();
+    std::vector<uint32_t> frontFacingTriIdxs;
+
+    for (size_t i = 0; i < obj.meshRenderer.triangles.size(); i++) {
+        Tri& tri = obj.meshRenderer.triangles[i];
+        glm::vec3 a = worldVs[tri[0]], b = worldVs[tri[1]], c = worldVs[tri[2]];
+
+        glm::vec3 normal = glm::cross(b-a, c-a);  // * -1 since left handed xyz system
+
+        if (glm::dot(normal, camera.pos - a) > 0) {
+            frontFacingTriIdxs.emplace_back(i);
+        }
+    }
+
+    return frontFacingTriIdxs;
+}
+
+void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t> visibleTris) {
+    std::vector<glm::vec3> vs = obj.getWorldVerts();
+}
+
+
+
+#pragma region OLD
+void wireframeRenderNaive(Display& d, Object& obj) {
     std::vector<glm::vec3> vs = obj.getWorldVerts();
 
     for (size_t i = 0; i < obj.meshRenderer.triangles.size(); i++) {
@@ -56,9 +103,7 @@ void wireframeRender(Display& d, Object& obj) {
         Point2D p2 = project(v2, d.W(), d.H(), 90.0f);
         Point2D p3 = project(v3, d.W(), d.H(), 90.0f);
 
-        std::cout << "line: "
-          << p1.x << "," << p1.y << " -> "
-          << p2.x << "," << p2.y << "\n";
+        // std::cout << "line: "  << p1.x << "," << p1.y << " -> " << p2.x << "," << p2.y << "\n";
 
 
         if (p1.z > 0 && p2.z > 0)  d.drawBresenhamLine(p1, p2, i32rgba(0,200,0));
@@ -66,4 +111,4 @@ void wireframeRender(Display& d, Object& obj) {
         if (p2.z > 0 && p3.z > 0)  d.drawBresenhamLine(p2, p3, i32rgba(0,200,0));
     }
 }
-
+#pragma endregion

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include <glm/vec3.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 // structs
 
@@ -26,4 +28,13 @@ struct FaceVertex {
     uint32_t vertex = 0;
     uint32_t texcoord = 0;
     uint32_t normal = 0;
+};
+
+
+struct Transform3D {
+    glm::vec3 pos;
+    glm::quat rot;
+
+    Transform3D(glm::vec3 pos, glm::quat rot) : pos(pos), rot(rot)
+    {}
 };
