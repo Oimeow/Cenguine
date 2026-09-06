@@ -1,0 +1,26 @@
+[
+{
+  "directory": "/Users/ledger/dev/Projects/Cenguine/build",
+  "command": "/usr/bin/clang++ -DGRAPHICS_API_OPENGL_33 -DPLATFORM_DESKTOP -DUSE_LIBTYPE_SHARED -I/Users/ledger/dev/Projects/Cenguine/include -isystem /opt/homebrew/include -g -std=gnu++23 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk/System/Library/Frameworks  -o CMakeFiles/CenguineBinary.dir/src/main.cpp.o -c /Users/ledger/dev/Projects/Cenguine/src/main.cpp",
+  "file": "/Users/ledger/dev/Projects/Cenguine/src/main.cpp",
+  "output": "CMakeFiles/CenguineBinary.dir/src/main.cpp.o"
+},
+{
+  "directory": "/Users/ledger/dev/Projects/Cenguine/build",
+  "command": "/usr/bin/clang++ -DGRAPHICS_API_OPENGL_33 -DPLATFORM_DESKTOP -DUSE_LIBTYPE_SHARED -I/Users/ledger/dev/Projects/Cenguine/include -isystem /opt/homebrew/include -g -std=gnu++23 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk/System/Library/Frameworks  -o CMakeFiles/CenguineBinary.dir/src/display.cpp.o -c /Users/ledger/dev/Projects/Cenguine/src/display.cpp",
+  "file": "/Users/ledger/dev/Projects/Cenguine/src/display.cpp",
+  "output": "CMakeFiles/CenguineBinary.dir/src/display.cpp.o"
+},
+{
+  "directory": "/Users/ledger/dev/Projects/Cenguine/build",
+  "command": "/usr/bin/clang++ -DGRAPHICS_API_OPENGL_33 -DPLATFORM_DESKTOP -DUSE_LIBTYPE_SHARED -I/Users/ledger/dev/Projects/Cenguine/include -isystem /opt/homebrew/include -g -std=gnu++23 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk/System/Library/Frameworks  -o CMakeFiles/CenguineBinary.dir/src/components.cpp.o -c /Users/ledger/dev/Projects/Cenguine/src/components.cpp",
+  "file": "/Users/ledger/dev/Projects/Cenguine/src/components.cpp",
+  "output": "CMakeFiles/CenguineBinary.dir/src/components.cpp.o"
+},
+{
+  "directory": "/Users/ledger/dev/Projects/Cenguine/build",
+  "command": "/usr/bin/clang++ -DGRAPHICS_API_OPENGL_33 -DPLATFORM_DESKTOP -DUSE_LIBTYPE_SHARED -I/Users/ledger/dev/Projects/Cenguine/include -isystem /opt/homebrew/include -g -std=gnu++23 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk/System/Library/Frameworks  -o CMakeFiles/CenguineBinary.dir/src/rendering.cpp.o -c /Users/ledger/dev/Projects/Cenguine/src/rendering.cpp",
+  "file": "/Users/ledger/dev/Projects/Cenguine/src/rendering.cpp",
+  "output": "CMakeFiles/CenguineBinary.dir/src/rendering.cpp.o"
+}
+]
