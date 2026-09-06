@@ -92,16 +92,22 @@ void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t>& visibleTris, 
         Point2D p2 = project(v2, d.W(), d.H(), 90.0f);
         Point2D p3 = project(v3, d.W(), d.H(), 90.0f);
 
-        uint32_t min_x = std::max(std::min({p1.x, p2.x, p3.x}), 0);
-        uint32_t max_x = std::min(std::max({p1.x, p2.x, p3.x}), int(d.W() - 1));
+        int min_x = std::max(std::min({p1.x, p2.x, p3.x}), 0);
+        int max_x = std::min(std::max({p1.x, p2.x, p3.x}), int(d.W() - 1));
 
-        uint32_t min_y = std::max(std::min({p1.y, p2.y, p3.y}), 0);
-        uint32_t max_y = std::min(std::max({p1.y, p2.y, p3.y}), int(d.H() - 1));
+        int min_y = std::max(std::min({p1.y, p2.y, p3.y}), 0);
+        int max_y = std::min(std::max({p1.y, p2.y, p3.y}), int(d.H() - 1));
 
-        for (uint32_t y = min_y; y < max_y; y++) {
-            for (uint32_t x = min_x; x < max_x; x++) {
+        for (int y = min_y; y < max_y; y++) {
+            for (int x = min_x; x < max_x; x++) {
                 Point2D xy = Point2D(x,y);
                 if (!rightOfEdgeAB(p1,p2,xy) && !rightOfEdgeAB(p2,p3,xy) && !rightOfEdgeAB(p3,p1,xy)) {
+                    if (x < 0 || x >= d.W() || y < 0 || y >= d.H()) {
+                        std::cerr << "BAD PIXEL: " << x << ", " << y << "\n";
+                        abort();
+                    }
+
+                    assert(i < obj.meshRenderer.colors.size());
                     d.putPixel(xy, obj.meshRenderer.colors[i]);
                 }
             }

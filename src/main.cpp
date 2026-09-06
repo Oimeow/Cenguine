@@ -12,19 +12,20 @@ int update(std::vector<Object>& objs);
 int shaders(Display &d, Transform3D& cameraTransform, std::vector<Object>& objs);
 
 int main() {
-    int width = 1000, height = 1000, dS = 1;
+    int width = 100, height = 100, dS = 10;
 
     InitWindow(width*dS, height*dS, "Cenguine");
     Display display(width, height, dS, 0);
 
     std::vector<Object> objs {
-        instantiate("objs/cube.obj", {0,0,8}, glm::quat({0, 1, 1}), {2,2,2}),
+        instantiate("objs/cube.obj", {0,0,2}, glm::quat({0, 1, 1}), {2,2,2}),
         instantiate("objs/stanford-bunny.obj", {0,0,1}, glm::quat(), {5, 5, 5})
     };
 
     Transform3D t_Camera({0,0,0}, glm::identity<glm::quat>());
 
     objs[0].meshRenderer.randomizeTriColors();
+    objs[1].meshRenderer.randomizeTriColors();
 
     while (!WindowShouldClose()) {
         SetWindowTitle(TextFormat("Cenguine  |  FPS: %d", GetFPS()));
@@ -67,9 +68,9 @@ int shaders(Display &d, Transform3D& tCamera, std::vector<Object>& objs) {
 
         std::vector<uint32_t> visibleTris = cullBackFaces(o, tCamera, vs);
 
-        wireframeRenderBFC(d, o, visibleTris, vs);
-        // rasterizeFill(d, o, visibleTriIdxs, tCamera);
-        vertexRender(d, vs);
+        //wireframeRenderBFC(d, o, visibleTris, vs);
+        rasterizeFill(d, o, visibleTris, tCamera, vs);
+        // vertexRender(d, vs);
     }
 
     return 0;
