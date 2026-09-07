@@ -28,12 +28,13 @@ public:
     glm::vec3 pos = glm::vec3{0,0,0};
     glm::quat rotation = glm::identity<glm::quat>();
     glm::vec3 localScale{1.0f};
+    std::vector<glm::vec3> worldVerts;
 
     MeshRenderer meshRenderer;
 
     void translate(const glm::vec3& vec);
     void localRotateEuler(const glm::vec3& eulerAngles);
-    std::vector<glm::vec3> getWorldVerts() const;
+    void updateWorldVerts();
 
 private:
      

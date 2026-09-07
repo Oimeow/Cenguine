@@ -35,6 +35,7 @@ std::vector<uint32_t> cullBackFacesScreen(Object& obj, const std::vector<Point2D
 
 void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t>& visibleTris, const std::vector<Point2D>& projVs);
 
+void cullAndRasterize(Display &d, Object& obj, const std::vector<Point2D>& projVs);
 
 #pragma region OLD
 

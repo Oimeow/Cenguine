@@ -83,10 +83,84 @@ std::vector<uint32_t> cullBackFacesScreen(Object& obj, const std::vector<Point2D
 
         if (signed2DArea > 0) {  // CCW
             frontFacingTriIdxs.emplace_back(i);
+
+            // OR rasterize
         }
     }
 
     return frontFacingTriIdxs;
+}
+
+void cullAndRasterize(Display &d, Object& obj, const std::vector<Point2D>& projVs) {
+    const int width = d.W();
+    const int height = d.H();
+    uint32_t* framebuffer = d.data();
+
+    std::vector<Tri>& triangles = obj.meshRenderer.triangles;
+    const std::vector<uint32_t>& colors = obj.meshRenderer.colors;
+
+    // rasterize
+    for (size_t i = 0; i < triangles.size(); i++) {
+        Tri& tri = triangles[i];
+
+        const Point2D p1 = projVs[tri[0]];
+        const Point2D p2 = projVs[tri[1]];
+        const Point2D p3 = projVs[tri[2]];
+
+        const int area = edgeFunction(p1, p2, p3);
+
+        if (area >= 0)  // dependent on winding order
+            continue;
+
+        int min_x = std::max(std::min({p1.x, p2.x, p3.x}), 0);
+        int max_x = std::min(std::max({p1.x, p2.x, p3.x}), width - 1);
+
+        int min_y = std::max(std::min({p1.y, p2.y, p3.y}), 0);
+        int max_y = std::min(std::max({p1.y, p2.y, p3.y}), height - 1);
+
+        if (min_x > max_x || min_y > max_y)  // absurdities
+            continue;
+
+        int e1_dx = p2.y - p1.y;
+        int e2_dx = p3.y - p2.y;
+        int e3_dx = p1.y - p3.y;
+
+        int e1_dy = p1.x - p2.x;
+        int e2_dy = p2.x - p3.x;
+        int e3_dy = p3.x - p1.x;
+
+        Point2D start{min_x, min_y};
+
+        int e1_row = edgeFunction(p1, p2, start);
+        int e2_row = edgeFunction(p2, p3, start);
+        int e3_row = edgeFunction(p3, p1, start);
+
+        const uint32_t color = colors[i];
+
+        for (int y = min_y; y <= max_y; y++) {
+            int e1 = e1_row,  e2 = e2_row,  e3 = e3_row;
+
+            uint32_t* pixel = framebuffer + y * width + min_x;
+
+            for (int x = min_x; x <= max_x; x++) {
+                if (e1 <= 0 && e2 <= 0 && e3 <= 0)
+                    *pixel = color;
+
+                pixel++;
+
+                // move a pixel right
+                e1 += e1_dx;
+                e2 += e2_dx;
+                e3 += e3_dx;
+                
+            }
+
+            // move a pixel down
+            e1_row += e1_dy;
+            e2_row += e2_dy;
+            e3_row += e3_dy;
+        }
+    }
 }
 
 void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t>& visibleTris, const std::vector<Point2D>& projVs) {
@@ -128,9 +202,11 @@ void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t>& visibleTris, 
         for (int y = min_y; y <= max_y; y++) {
             int e1 = e1_row,  e2 = e2_row,  e3 = e3_row;
 
+            uint32_t* row = framebuffer + y * width;
+
             for (int x = min_x; x <= max_x; x++) {
                 if (e1 <= 0 && e2 <= 0 && e3 <= 0)
-                    framebuffer[y*width + x] = obj.meshRenderer.colors[i];
+                    row[x] = obj.meshRenderer.colors[i];
 
                 // move a pixel right
                 e1 += e1_dx;
@@ -151,7 +227,7 @@ void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t>& visibleTris, 
 
 #pragma region OLD
 void wireframeRenderNaive(Display& d, Object& obj) {
-    std::vector<glm::vec3> vs = obj.getWorldVerts();
+    std::vector<glm::vec3> vs = obj.worldVerts;
 
     for (size_t i = 0; i < obj.meshRenderer.triangles.size(); i++) {
         Tri& tri = obj.meshRenderer.triangles[i];

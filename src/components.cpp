@@ -42,18 +42,17 @@ void Object::localRotateEuler(const glm::vec3& eulerAngles) {
     rotation *= transformation;
 }
 
-std::vector<glm::vec3> Object::getWorldVerts() const {
-    std::vector<glm::vec3> worldVerts;
 
-    for (const glm::vec3& v0 : meshRenderer.vertices) {
-        glm::vec3 vf = v0 * localScale;
+void Object::updateWorldVerts() {
+    worldVerts.resize(meshRenderer.vertices.size());
+
+    for (size_t i = 0; i < meshRenderer.vertices.size(); i++) {
+        glm::vec3 vf = meshRenderer.vertices[i] * localScale;
         vf = rotation * vf;
         vf += pos;
 
-        worldVerts.push_back(vf);
+        worldVerts[i] = vf;
     }
-
-    return worldVerts;
 }
 
 

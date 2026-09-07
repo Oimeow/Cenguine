@@ -18,11 +18,8 @@ int main() {
     Display display(width, height, dS, 0);
 
     std::vector<Object> objs {
-        //instantiate("objs/cube.obj", {0,0,5}, glm::quat({0, 1, 1}), {2,2,2}),
-        instantiate("objs/stanford-bunny.obj",
-            {0,0,1.1},
-            glm::quat(),
-            {5,5,5})
+        instantiate("objs/cube.obj", {0,0,5}, glm::quat({0, 1, 1}), {2,2,2}),
+        // instantiate("objs/stanford-bunny.obj",{0,0,1.1},glm::quat(), {5,5,5})
     };
 
     Transform3D t_Camera({0,0,0}, glm::identity<glm::quat>());
@@ -37,10 +34,10 @@ int main() {
         BeginDrawing();
 
         // clear
-        ClearBackground(BLACK); 
-        display.clear(0);   
+        // ClearBackground(BLACK); 
+        display.clear(0xff000000);   
 
-        //update(objs);  // run behaviours (update)
+        update(objs);  // run behaviours (update)
         shaders(display, t_Camera, objs);  // run shaders
 
         // push Texture2D from framebuffer
@@ -59,7 +56,7 @@ int update(std::vector<Object>& objs) {
     float dt = (float)GetFrameTime();
     
     o.translate({0,0,0.5*dt});
-    // o.localRotateEuler({dt, dt, dt/2});
+    o.localRotateEuler({dt, dt, dt/2});
 
     // std::cout << o.pos.x << ", " << o.pos.y << ", " << o.pos.z << std::endl;
 
@@ -73,22 +70,22 @@ int shaders(Display &d, Transform3D& tCamera, std::vector<Object>& objs) {
     Projection fproj = fov_to_f(height, 90.0f);
 
     for (Object& o : objs) {
-        auto worldVs = o.getWorldVerts();
+        o.updateWorldVerts();
+        const auto& worldVs = o.worldVerts;
 
         std::vector<Point2D> projVs(worldVs.size());
         for (size_t i = 0; i < worldVs.size(); i++) {
             projVs[i] = project(worldVs[i], width, height, fproj);
         }
 
-        // std::vector<uint32_t> visibleTris = cullBackFaces(o, tCamera, worldVs);
-        std::vector<uint32_t> visibleTris = cullBackFacesScreen(o, projVs);
+        cullAndRasterize(d, o, projVs);
+        // std::vector<uint32_t> visibleTris = cullBackFacesScreen(o, projVs);
 
-        std::cout << "visible: " << visibleTris.size()
-          << " / " << o.meshRenderer.triangles.size() << '\n';
+        // std::cout << "visible: " << visibleTris.size()
+        //   << " / " << o.meshRenderer.triangles.size() << '\n';
 
-        // wireframeRenderBFC(d, o, visibleTris, vs);
-        rasterizeFill(d, o, visibleTris, projVs);
-        // vertexRender(d, vs);
+        // rasterizeFill(d, o, visibleTris, projVs);
+        // vertexRender(d, worldVs);
     }
 
     return 0;
