@@ -8,6 +8,7 @@
 // for randomness
 #include <cstdlib>
 #include <ctime>
+#include <cassert>
 
 
 FaceVertex parseFaceVertex(const std::string& face) {
@@ -30,6 +31,21 @@ FaceVertex parseFaceVertex(const std::string& face) {
     return res;
 }
 
+// class Scene
+
+Object Scene::instantiate(
+    const std::string& objFile,
+    glm::vec3 pos, 
+    glm::quat rot, 
+    glm::vec3 scale
+) 
+{
+    Object o = Object::instantiate(objFile, pos, rot, scale);
+    objects.push_back(o);
+    return o;
+}
+
+
 // class Object
 
 void Object::translate(const glm::vec3& vec) {
@@ -47,6 +63,7 @@ void Object::updateWorldVerts() {
     worldVerts.resize(meshRenderer.vertices.size());
 
     for (size_t i = 0; i < meshRenderer.vertices.size(); i++) {
+        // local translations/transformations
         glm::vec3 vf = meshRenderer.vertices[i] * localScale;
         vf = rotation * vf;
         vf += pos;
@@ -55,11 +72,36 @@ void Object::updateWorldVerts() {
     }
 }
 
+void Object::debugObjectInformation() {
+    std::cout << "Object  :  Verts / Tris / Colors  :" << std::dec << 
+                meshRenderer.vertices.size() <<
+                meshRenderer.triangles.size() <<
+                meshRenderer.colors.size() <<
+                std::endl;
+}
+
+Object Object::instantiate(
+    const std::string& objFile,
+    glm::vec3 pos, 
+    glm::quat rot, 
+    glm::vec3 scale
+) {
+    Object obj;
+
+    obj.meshRenderer = MeshRenderer::loadFromObj(objFile);
+    obj.pos = pos;
+    obj.rotation = rot;
+    obj.localScale = scale;
+
+    return obj;
+}
+
 
 // class MeshRenderer
 
 void MeshRenderer::randomizeTriColors() {
     colors.clear();
+    colors.reserve(triangles.size());
 
     srand(time(nullptr));
     for (size_t i = 0; i < triangles.size(); i++) {
@@ -74,6 +116,8 @@ void MeshRenderer::randomizeTriColors() {
     for (auto color : colors) {
         std::cout << color << std::endl;
     }
+
+    assert(colors.size() == triangles.size());
 }
 
 MeshRenderer MeshRenderer::loadFromObj(std::string objFname) {
@@ -144,20 +188,3 @@ MeshRenderer MeshRenderer::loadFromObj(std::string objFname) {
     return result;
 }
 
-
-// others
-Object instantiate(
-    const std::string& objFile,
-    glm::vec3 pos, 
-    glm::quat rot, 
-    glm::vec3 scale
-) {
-    Object obj;
-
-    obj.meshRenderer = MeshRenderer::loadFromObj(objFile);
-    obj.pos = pos;
-    obj.rotation = rot;
-    obj.localScale = scale;
-
-    return obj;
-}

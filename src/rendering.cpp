@@ -36,7 +36,9 @@ void vertexRender(Display &d, const std::vector<glm::vec3>& vs) {
     }
 }
 
-void wireframeRenderBFC(Display& d, Object& obj, std::vector<uint32_t>& visibleTris, const std::vector<glm::vec3>& wvs) {
+void wireframeRenderBFC(Display& d, Object& obj, std::vector<uint32_t>& visibleTris) {
+    const std::vector<glm::vec3>& wvs = obj.worldVerts;
+
     for (uint32_t i : visibleTris) {
         Tri tri = obj.meshRenderer.triangles[i];
 
@@ -79,9 +81,9 @@ std::vector<uint32_t> cullBackFacesScreen(Object& obj, const std::vector<Point2D
         Tri& tri = obj.meshRenderer.triangles[i];
         Point2D a = projVs[tri[0]], b = projVs[tri[1]], c = projVs[tri[2]];
 
-        int signed2DArea = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+        int halfSigned2DArea = signedParallelogramArea(a,b,c);
 
-        if (signed2DArea > 0) {  // CCW
+        if (halfSigned2DArea > 0) {  // CCW
             frontFacingTriIdxs.emplace_back(i);
 
             // OR rasterize
@@ -91,7 +93,7 @@ std::vector<uint32_t> cullBackFacesScreen(Object& obj, const std::vector<Point2D
     return frontFacingTriIdxs;
 }
 
-void cullAndRasterize(Display &d, Object& obj, const std::vector<Point2D>& projVs) {
+void cullAndRasterizeWithLighting(Display &d, Object& obj, const std::vector<Point2D>& projVs, const std::vector<Light*>& lights) {
     const int width = d.W();
     const int height = d.H();
     uint32_t* framebuffer = d.data();
@@ -101,13 +103,15 @@ void cullAndRasterize(Display &d, Object& obj, const std::vector<Point2D>& projV
 
     // rasterize
     for (size_t i = 0; i < triangles.size(); i++) {
+        std::cout << "tris / colors: " << std::dec << triangles.size() << 
+           " / " << colors.size() << std::endl;
         Tri& tri = triangles[i];
 
         const Point2D p1 = projVs[tri[0]];
         const Point2D p2 = projVs[tri[1]];
         const Point2D p3 = projVs[tri[2]];
 
-        const int area = edgeFunction(p1, p2, p3);
+        const int area = signedParallelogramArea(p1, p2, p3);
 
         if (area >= 0)  // dependent on winding order
             continue;
@@ -131,11 +135,34 @@ void cullAndRasterize(Display &d, Object& obj, const std::vector<Point2D>& projV
 
         Point2D start{min_x, min_y};
 
-        int e1_row = edgeFunction(p1, p2, start);
-        int e2_row = edgeFunction(p2, p3, start);
-        int e3_row = edgeFunction(p3, p1, start);
+        int e1_row = signedParallelogramArea(p1, p2, start);
+        int e2_row = signedParallelogramArea(p2, p3, start);
+        int e3_row = signedParallelogramArea(p3, p1, start);
 
-        const uint32_t color = colors[i];
+        uint32_t color = colors[i];
+        glm::vec3 a = obj.worldVerts[tri[0]];
+        glm::vec3 b = obj.worldVerts[tri[1]];
+        glm::vec3 c = obj.worldVerts[tri[2]];
+
+        glm::vec3 normal = glm::normalize(glm::cross(b-a, c-a));
+
+        Color shaded = unpackColor(color);
+
+        for (Light* l : lights) {
+            if (auto* directional = dynamic_cast<DirectionalLight*>(l)) {
+                glm::vec3 lightDir = glm::normalize(-directional->dir);
+
+                float diffuse = glm::dot(normal, lightDir);
+                diffuse = std::max(diffuse, 0.0f) * directional->intensity;
+
+                float ambient = 0.5f;
+
+                float intensity = std::clamp(ambient + diffuse, 0.0f, 100.0f);
+
+                shaded = shade(shaded, directional->color, intensity);
+            }
+        }
+
 
         for (int y = min_y; y <= max_y; y++) {
             int e1 = e1_row,  e2 = e2_row,  e3 = e3_row;
@@ -143,16 +170,21 @@ void cullAndRasterize(Display &d, Object& obj, const std::vector<Point2D>& projV
             uint32_t* pixel = framebuffer + y * width + min_x;
 
             for (int x = min_x; x <= max_x; x++) {
-                if (e1 <= 0 && e2 <= 0 && e3 <= 0)
-                    *pixel = color;
+                const bool insideTriangle = e1 <= 0 && e2 <= 0 && e3 <= 0;
+                if (insideTriangle)
+                    *pixel = packColor(shaded);
 
+                // interpolation step
+
+                // lighting
+
+                
                 pixel++;
 
-                // move a pixel right
+                // step a pixel to rightwards
                 e1 += e1_dx;
                 e2 += e2_dx;
                 e3 += e3_dx;
-                
             }
 
             // move a pixel down
@@ -195,9 +227,9 @@ void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t>& visibleTris, 
 
         Point2D start{min_x, min_y};
 
-        int e1_row = edgeFunction(p1, p2, start);
-        int e2_row = edgeFunction(p2, p3, start);
-        int e3_row = edgeFunction(p3, p1, start);
+        int e1_row = signedParallelogramArea(p1, p2, start);
+        int e2_row = signedParallelogramArea(p2, p3, start);
+        int e3_row = signedParallelogramArea(p3, p1, start);
 
         for (int y = min_y; y <= max_y; y++) {
             int e1 = e1_row,  e2 = e2_row,  e3 = e3_row;
@@ -223,7 +255,13 @@ void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t>& visibleTris, 
     }
 }
 
-
+Color shade(Color &material, Color &light, float &intensity) {
+    const uint8_t rShade = std::clamp(material.r * (light.r / 255.0f) * intensity, 0.0f, 255.0f);
+    const uint8_t gShade = std::clamp(material.g * (light.g / 255.0f) * intensity, 0.0f, 255.0f);
+    const uint8_t bShade = std::clamp(material.b * (light.b / 255.0f) * intensity, 0.0f, 255.0f);
+    
+    return {rShade, gShade, bShade, material.a};
+}
 
 #pragma region OLD
 void wireframeRenderNaive(Display& d, Object& obj) {

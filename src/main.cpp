@@ -8,24 +8,33 @@
 #include "utils.hpp"
 
 
-int update(std::vector<Object>& objs);
-int shaders(Display &d, Transform3D& cameraTransform, std::vector<Object>& objs);
+int update(Scene &scene);
+int shaders(Display &d, Scene &scene, CCamera& camera);
 
 int main() {
     int width = 500, height = 500, dS = 1;
 
     InitWindow(width*dS, height*dS, "Cenguine");
-    Display display(width, height, dS, 0);
+    Display display(width, height, dS, 120);
 
     std::vector<Object> objs {
-        instantiate("objs/cube.obj", {0,0,5}, glm::quat({0, 1, 1}), {2,2,2}),
+        Object::instantiate("objs/cube.obj", {0,0,5}, glm::quat({0, 1, 1}), {2,2,2}),
         // instantiate("objs/stanford-bunny.obj",{0,0,1.1},glm::quat(), {5,5,5})
     };
 
-    Transform3D t_Camera({0,0,0}, glm::identity<glm::quat>());
+    DirectionalLight sun = DirectionalLight(Color(255, 255, 255), {0, 1, 0}, 1.0f);
 
-    for (auto& obj : objs) {
+    std::vector<Light*> lights {
+        &sun
+    };
+
+    Scene activeScene{objs, lights, "testing grounds"};
+
+    CCamera cam({0,0,0}, {0,0,0,1}, 90.0f);
+
+    for (auto& obj : activeScene.objects) {
         obj.meshRenderer.randomizeTriColors();
+        std::cout << "INITIALIZING  :  " << std::dec << obj.meshRenderer.colors.size() << std::endl;
     }
 
     while (!WindowShouldClose()) {
@@ -37,8 +46,8 @@ int main() {
         // ClearBackground(BLACK); 
         display.clear(0xff000000);   
 
-        update(objs);  // run behaviours (update)
-        shaders(display, t_Camera, objs);  // run shaders
+        update(activeScene);  // run behaviours (update)
+        shaders(display, activeScene, cam);  // run shaders
 
         // push Texture2D from framebuffer
         display.renderFramebuffer();
@@ -51,8 +60,8 @@ int main() {
     return 0;
 }
 
-int update(std::vector<Object>& objs) {
-    Object& o = objs[0];
+int update(Scene& scene) {
+    Object& o = scene.objects[0];
     float dt = (float)GetFrameTime();
     
     o.translate({0,0,0.5*dt});
@@ -63,22 +72,27 @@ int update(std::vector<Object>& objs) {
     return 0;
 }
 
-int shaders(Display &d, Transform3D& tCamera, std::vector<Object>& objs) {
+int shaders(Display &d, Scene& scene, CCamera& camera) {
     const int width = d.W();
     const int height = d.H();
 
-    Projection fproj = fov_to_f(height, 90.0f);
+    Projection fproj = fov_to_f(height, camera.fov);
 
-    for (Object& o : objs) {
+    for (Object& o : scene.objects) {
         o.updateWorldVerts();
         const auto& worldVs = o.worldVerts;
 
         std::vector<Point2D> projVs(worldVs.size());
         for (size_t i = 0; i < worldVs.size(); i++) {
-            projVs[i] = project(worldVs[i], width, height, fproj);
+            glm::vec3 camV = worldVs[i];
+
+            camV -= camera.pos;
+            camV = camera.rotation * camV;
+
+            projVs[i] = project(camV, width, height, fproj);
         }
 
-        cullAndRasterize(d, o, projVs);
+        cullAndRasterizeWithLighting(d, o, projVs, scene.lights);
         // std::vector<uint32_t> visibleTris = cullBackFacesScreen(o, projVs);
 
         // std::cout << "visible: " << visibleTris.size()
