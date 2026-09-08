@@ -103,7 +103,7 @@ Object Object::instantiate(
 
 // class MeshRenderer
 
-void MeshRenderer::initTriColors(Color col) {
+void MeshRenderer::initTriColors(CColor col) {
     colors.clear();
     colors.reserve(triangles.size());
 
@@ -121,8 +121,7 @@ void MeshRenderer::randomizeTriColors() {
         uint8_t r = rand() % 256;
         uint8_t g = rand() % 256;
         uint8_t b = rand() % 256;
-        // std::cout << (r << 16 | g << 8 | b) << std::endl;
-        colors.push_back(Color(r, g, b, 255));
+        colors.push_back(CColor(r, g, b, 255));
     }
 
     std::cout << std::endl;

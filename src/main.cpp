@@ -22,7 +22,7 @@ int main() {
         Object::instantiate("objs/stanford-bunny.obj",{0,0,1.1},glm::quat({1,0,0,0}), {5,5,5})
     };
 
-    DirectionalLight sun = DirectionalLight(Color(255, 255, 255,255), {0, 1, 0}, 1.0f);
+    DirectionalLight sun = DirectionalLight(CColor(255, 255, 255,255), {0, 1, 0}, 1.0f);
 
     std::vector<Light*> lights {
         &sun

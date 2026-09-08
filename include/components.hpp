@@ -14,9 +14,9 @@ public:
     std::vector<glm::vec3> vertices;
     std::vector<Tri> triangles;
     std::string meshName;
-    std::vector<Color> colors;
+    std::vector<CColor> colors;
 
-    void initTriColors(Color col);
+    void initTriColors(CColor col);
     void randomizeTriColors();
     static MeshRenderer loadFromObj(std::string objFname);
 
@@ -46,10 +46,10 @@ private:
 
 class Light {
 public:
-    Color color{255,255,255,255};
+    CColor color{255,255,255,255};
     float intensity{1.0f};
 
-    Light(Color color, float intensity)
+    Light(CColor color, float intensity)
         : color(color), intensity(intensity)
     {}
 
@@ -62,7 +62,7 @@ class DirectionalLight : public Light {
 public:
     glm::vec3 dir;
 
-    DirectionalLight(const Color &color, const glm::vec3 &dir, float intensity)
+    DirectionalLight(const CColor &color, const glm::vec3 &dir, float intensity)
         : Light(color, intensity), dir(glm::normalize(dir))
     {}
 

@@ -23,8 +23,6 @@ void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t>& visibleTris, 
 
 void backfaceCullZCullRasterizeLight(Display &d, Object& obj, const std::vector<Point2D>& projVs, const std::vector<Light*>& lights);
 
-Color shade(Color &material, Color &light, float &intensity);
-
 #pragma region OLD
 
 void wireframeRenderNaive(Display &d, Object& obj);

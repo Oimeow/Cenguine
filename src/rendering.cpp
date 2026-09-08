@@ -16,7 +16,7 @@ void testShader(Display &d) {
             uint32_t g = 255*(height - y) / height;
             uint32_t b = 0;
         
-            d.putPixel(x, y, Color(r,g,b,255));
+            d.putPixel(x, y, CColor(r,g,b,255));
         }
     }
 }
@@ -31,7 +31,7 @@ void vertexRender(Display &d, const std::vector<glm::vec3>& vs) {
 
         d.putPixel(
             p.x, p.y,
-            Color(0, 255, 0)
+            CColor(0, 255, 0)
         );
     }
 }
@@ -51,9 +51,9 @@ void wireframeRenderBFC(Display& d, Object& obj, std::vector<uint32_t>& visibleT
         // std::cout << "line: "  << p1.x << "," << p1.y << " -> " << p2.x << "," << p2.y << "\n";
 
 
-        if (p1.z > 0 && p2.z > 0)  d.drawBresenhamLine(p1, p2, Color(0,200,0));
-        if (p3.z > 0 && p1.z > 0)  d.drawBresenhamLine(p3, p1, Color(0,200,0));
-        if (p2.z > 0 && p3.z > 0)  d.drawBresenhamLine(p2, p3, Color(0,200,0));
+        if (p1.z > 0 && p2.z > 0)  d.drawBresenhamLine(p1, p2, CColor(0,200,0));
+        if (p3.z > 0 && p1.z > 0)  d.drawBresenhamLine(p3, p1, CColor(0,200,0));
+        if (p2.z > 0 && p3.z > 0)  d.drawBresenhamLine(p2, p3, CColor(0,200,0));
     }
 }
 
@@ -96,11 +96,11 @@ std::vector<uint32_t> cullBackFacesScreen(Object& obj, const std::vector<Point2D
 void backfaceCullZCullRasterizeLight(Display &d, Object& obj, const std::vector<Point2D>& projVs, const std::vector<Light*>& lights) {
     const int width = d.W();
     const int height = d.H();
-    Color* framebuffer = d.framebuffer.data();
+    CColor* framebuffer = d.framebuffer.data();
     float* zbuffer = d.zbuffer.data();
 
     std::vector<Tri>& triangles = obj.meshRenderer.triangles;
-    const std::vector<Color>& colors = obj.meshRenderer.colors;
+    const std::vector<CColor>& colors = obj.meshRenderer.colors;
 
     // rasterize
     for (size_t i = 0; i < triangles.size(); i++) {
@@ -148,7 +148,7 @@ void backfaceCullZCullRasterizeLight(Display &d, Object& obj, const std::vector<
 
         glm::vec3 normal = glm::normalize(glm::cross(b-a, c-a));
 
-        Color shaded = colors[i];
+        CColor shaded = colors[i];
 
         for (Light* l : lights) {
             if (auto* directional = dynamic_cast<DirectionalLight*>(l)) {
@@ -161,14 +161,14 @@ void backfaceCullZCullRasterizeLight(Display &d, Object& obj, const std::vector<
 
                 float intensity = std::max(ambient + diffuse, 0.0f);
 
-                shaded = shade(shaded, directional->color, intensity);
+                shaded = CColor::shade(shaded, directional->color, intensity);
             }
         }
 
         for (int y = min_y; y <= max_y; y++) {
             vec3i edge = edgeRow;
 
-            Color* frameRowbuf = framebuffer + y * width;
+            CColor* frameRowbuf = framebuffer + y * width;
             float* zRowbuf = zbuffer + y * width;
 
             for (int x = min_x; x <= max_x; x++) {
@@ -195,7 +195,7 @@ void backfaceCullZCullRasterizeLight(Display &d, Object& obj, const std::vector<
 void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t>& visibleTris, const std::vector<Point2D>& projVs) {
     const int width = d.W();
     const int height = d.H();
-    Color* framebuffer = d.framebuffer.data();
+    CColor* framebuffer = d.framebuffer.data();
 
     // rasterize
     for (uint32_t i : visibleTris) {
@@ -231,7 +231,7 @@ void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t>& visibleTris, 
         for (int y = min_y; y <= max_y; y++) {
             int e1 = e1_row,  e2 = e2_row,  e3 = e3_row;
 
-            Color* row = framebuffer + y * width;
+            CColor* row = framebuffer + y * width;
 
             for (int x = min_x; x <= max_x; x++) {
                 if (e1 <= 0 && e2 <= 0 && e3 <= 0)
@@ -252,13 +252,6 @@ void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t>& visibleTris, 
     }
 }
 
-Color shade(Color &material, Color &light, float &intensity) {
-    const uint8_t rShade = std::clamp(material.r * (light.r / 255.0f) * intensity, 0.0f, 255.0f);
-    const uint8_t gShade = std::clamp(material.g * (light.g / 255.0f) * intensity, 0.0f, 255.0f);
-    const uint8_t bShade = std::clamp(material.b * (light.b / 255.0f) * intensity, 0.0f, 255.0f);
-    
-    return {rShade, gShade, bShade, material.a};
-}
 
 #pragma region OLD
 void wireframeRenderNaive(Display& d, Object& obj) {
@@ -276,9 +269,9 @@ void wireframeRenderNaive(Display& d, Object& obj) {
         // std::cout << "line: "  << p1.x << "," << p1.y << " -> " << p2.x << "," << p2.y << "\n";
 
 
-        if (p1.z > 0 && p2.z > 0)  d.drawBresenhamLine(p1, p2, Color(0,200,0));
-        if (p3.z > 0 && p1.z > 0)  d.drawBresenhamLine(p3, p1, Color(0,200,0));
-        if (p2.z > 0 && p3.z > 0)  d.drawBresenhamLine(p2, p3, Color(0,200,0));
+        if (p1.z > 0 && p2.z > 0)  d.drawBresenhamLine(p1, p2, CColor(0,200,0));
+        if (p3.z > 0 && p1.z > 0)  d.drawBresenhamLine(p3, p1, CColor(0,200,0));
+        if (p2.z > 0 && p3.z > 0)  d.drawBresenhamLine(p2, p3, CColor(0,200,0));
     }
 }
 #pragma endregion

@@ -28,16 +28,16 @@ Point2D project(const glm::vec3& v, const int w, const int h, const Projection& 
     return {xf, yf, v.z};
 }
 
-Color intToColor(uint32_t color) {
+CColor intToColor(uint32_t color) {
     uint8_t r = color & 0xff;
     uint8_t g = (color >> 8) & 0xff;
     uint8_t b = (color >> 16) & 0xff;
     uint8_t a = color >> 24 & 0xff;
 
-    return Color(r, g, b, a);
+    return CColor(r, g, b, a);
 }
 
-uint32_t colorToInt(Color color) {
+uint32_t colorToInt(CColor color) {
     return i32rgba(color.r, color.g, color.b, color.a);
 }
 
@@ -51,6 +51,6 @@ std::string quatAsString(const glm::quat &q) {
     return std::format("quat({}, {}, {}, {})", q.w, q.x, q.y, q.z);
 }
 
-std::string colorAsString(const Color &c) {
-    return std::format("Color(r = {},  g = {},  b = {},  a = {})", c.r, c.g, c.b, c.a);
+std::string colorAsString(const CColor &c) {
+    return std::format("CColor(r = {},  g = {},  b = {},  a = {})", c.r, c.g, c.b, c.a);
 }
