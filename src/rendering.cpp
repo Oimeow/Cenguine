@@ -103,8 +103,6 @@ void cullAndRasterizeWithLighting(Display &d, Object& obj, const std::vector<Poi
 
     // rasterize
     for (size_t i = 0; i < triangles.size(); i++) {
-        std::cout << "tris / colors: " << std::dec << triangles.size() << 
-           " / " << colors.size() << std::endl;
         Tri& tri = triangles[i];
 
         const Point2D p1 = projVs[tri[0]];

@@ -19,7 +19,7 @@ int main() {
 
     std::vector<Object> objs {
         Object::instantiate("objs/cube.obj", {0,0,5}, glm::quat({0, 1, 1}), {2,2,2}),
-        // instantiate("objs/stanford-bunny.obj",{0,0,1.1},glm::quat(), {5,5,5})
+        Object::instantiate("objs/stanford-bunny.obj",{0,0,1.1},glm::quat(), {5,5,5})
     };
 
     DirectionalLight sun = DirectionalLight(Color(255, 255, 255), {0, 1, 0}, 1.0f);
@@ -30,7 +30,7 @@ int main() {
 
     Scene activeScene{objs, lights, "testing grounds"};
 
-    CCamera cam({0,0,0}, {0,0,0,1}, 90.0f);
+    CCamera cam({0,0,0});
 
     for (auto& obj : activeScene.objects) {
         obj.meshRenderer.randomizeTriColors();
@@ -64,7 +64,7 @@ int update(Scene& scene) {
     Object& o = scene.objects[0];
     float dt = (float)GetFrameTime();
     
-    o.translate({0,0,0.5*dt});
+    o.translate({0,1*dt,0.5*dt});
     o.localRotateEuler({dt, dt, dt/2});
 
     // std::cout << o.pos.x << ", " << o.pos.y << ", " << o.pos.z << std::endl;
