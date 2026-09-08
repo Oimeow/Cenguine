@@ -13,6 +13,8 @@ class MeshRenderer {
 public:
     std::vector<glm::vec3> vertices;
     std::vector<Tri> triangles;
+    std::vector<glm::vec2> texcoords;
+    std::vector<glm::vec3> vertexNormals;
     std::string meshName;
     std::vector<CColor> colors;
 
@@ -30,12 +32,14 @@ public:
     glm::quat rotation = glm::identity<glm::quat>();
     glm::vec3 localScale{1.0f};
     std::vector<glm::vec3> worldVerts;
+    std::vector<glm::vec3> worldVertNormals;
 
     MeshRenderer meshRenderer;
 
     void translate(const glm::vec3& vec);
     void localRotateEuler(const glm::vec3& eulerAngles);
     void updateWorldVerts();
+    void updateWorldNormals();
     void debugObjectInformation();
 
     static Object instantiate(const std::string& objFile, glm::vec3 pos = {0,0,0}, glm::quat rot = glm::identity<glm::quat>(), glm::vec3 scale = {1,1,1});

@@ -22,14 +22,40 @@ constexpr uint32_t i32rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 0xff) {
 
 // structs
 
+struct vec3i {
+    int x, y, z;
+
+    vec3i(): x(0), y(0), z(0) {}
+    vec3i(glm::vec3 v) : x(v.x), y(v.y), z(v.z) {}
+    vec3i(int x, int y, int z) : x(x), y(y), z(z) {}
+
+    static inline int dot(vec3i &a, vec3i &b) {
+        return a.x * b.x + a.y * b.y + a.z * b.z;
+    }
+    static inline float dot(vec3i &a, glm::vec3 &b) {
+        return a.x * b.x + a.y * b.y + a.z * b.z;  // i think this will auto-cast to float? yes it will;
+    }
+
+    int& operator[](size_t i) { return (&x)[i]; }
+
+    const int& operator[](size_t i) const { return (&x)[i]; }
+
+    vec3i operator+(const vec3i& v) const { return { x + v.x, y + v.y, z + v.z }; }
+
+    vec3i& operator+=(const vec3i& v) { 
+        x += v.x;  y += v.y;  z += v.z;
+        return *this;
+    }
+};
+
 struct Tri {
-    uint32_t vs[3];
+    vec3i vs, uvs, vns;
 
     // ctor
-    Tri(uint32_t a, uint32_t b, uint32_t c) : vs{a,b,c} 
+    Tri(int a, int b, int c) : vs{a,b,c}, uvs{}, vns{}
     {}
-
-    uint32_t& operator[](size_t i) { return vs[i]; }
+    Tri(const vec3i &vs, const vec3i &uvs, const vec3i &vns) : vs(vs), uvs(uvs), vns(vns)
+    {}
 };
 
 
@@ -53,31 +79,6 @@ struct Transform3D {
 
 struct Projection {
     float f;
-};
-
-struct vec3i {
-    int x, y, z;
-
-    vec3i(glm::vec3 v) : x(v.x), y(v.y), z(v.z) {}
-    vec3i(int x, int y, int z) : x(x), y(y), z(z) {}
-
-    static inline int dot(vec3i &a, vec3i &b) {
-        return a.x * b.x + a.y * b.y + a.z * b.z;
-    }
-    static inline float dot(vec3i &a, glm::vec3 &b) {
-        return a.x * b.x + a.y * b.y + a.z * b.z;  // i think this will auto-cast to float? yes it will;
-    }
-
-    int& operator[](size_t i) { return (&x)[i]; }
-
-    const int& operator[](size_t i) const { return (&x)[i]; }
-
-    vec3i operator+(const vec3i& v) const { return { x + v.x, y + v.y, z + v.z }; }
-
-    vec3i& operator+=(const vec3i& v) { 
-        x += v.x;  y += v.y;  z += v.z;
-        return *this;
-    }
 };
 
 struct CColor {

@@ -1,6 +1,8 @@
 #include "utils.hpp"
 #include <iostream>
 
+
+
 Projection fov_to_f(int height, float fov) {
     return Projection(.5f*height / glm::tan(0.5f * glm::radians(fov)));
 }

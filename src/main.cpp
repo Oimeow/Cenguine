@@ -80,7 +80,9 @@ int shaders(Display &d, Scene& scene, CCamera& camera) {
 
     for (Object& o : scene.objects) {
         o.updateWorldVerts();
+        o.updateWorldNormals();
         const std::vector<glm::vec3>& worldVs = o.worldVerts;
+        // const std::vector<glm::vec3>& worldNormals = o.worldVertNormals;
 
         // o.debugObjectInformation();
 

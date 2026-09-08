@@ -24,7 +24,6 @@ FaceVertex parseFaceVertex(const std::string& face) {
 
     // recall that .OBJ files are 1-indexed
     res.vertex = std::stoi(v) - 1;
-
     res.texcoord = !vt.empty() ? std::stoi(vt) - 1 : -1;
     res.normal = !vn.empty() ? std::stoi(vn) - 1 : -1;
 
@@ -69,6 +68,15 @@ void Object::updateWorldVerts() {
         vf += pos;
 
         worldVerts[i] = vf;
+    }
+}
+
+void Object::updateWorldNormals() {
+    worldVertNormals.resize(meshRenderer.vertexNormals.size());
+
+    for (size_t i = 0; i < meshRenderer.vertexNormals.size(); i++) {
+        glm::vec3 n = rotation * meshRenderer.vertexNormals[i];
+        worldVertNormals[i] = glm::normalize(n);
     }
 }
 
@@ -143,6 +151,8 @@ MeshRenderer MeshRenderer::loadFromObj(std::string objFname) {
     }
 
     std::vector<glm::vec3> vs;
+    std::vector<glm::vec2> uvs;
+    std::vector<glm::vec3> vns;
     std::vector<Tri> tris;
     std::string _meshName;
 
@@ -156,6 +166,24 @@ MeshRenderer MeshRenderer::loadFromObj(std::string objFname) {
             char type;
             
             ss >> type >> _meshName;
+        }
+        else if (line.starts_with("vt ")) {
+            std::stringstream ss(line);
+            std::string type;
+            float u, v;
+
+            ss >> type >> u >> v;
+
+            uvs.push_back({u,v});
+        }
+        else if (line.starts_with("vn ")) {
+            std::stringstream ss(line);
+            std::string type;
+            float x, y, z;
+
+            ss >> type >> x >> y >> z;
+
+            vns.push_back({x,y,z});
         }
         else if (line[0] == 'v') {
             // vertex handling
@@ -183,9 +211,21 @@ MeshRenderer MeshRenderer::loadFromObj(std::string objFname) {
                 if (fvGroup.size() < 3) { continue; }
 
                 tris.emplace_back(
-                    fvGroup[0].vertex,
-                    fvGroup[fvGroup.size() - 2].vertex, 
-                    fvGroup[fvGroup.size() - 1].vertex
+                    vec3i(
+                        fvGroup[0].vertex,
+                        fvGroup[fvGroup.size() - 2].vertex, 
+                        fvGroup[fvGroup.size() - 1].vertex
+                    ),
+                    vec3i(
+                        fvGroup[0].texcoord,
+                        fvGroup[fvGroup.size() - 2].texcoord, 
+                        fvGroup[fvGroup.size() - 1].texcoord
+                    ),
+                    vec3i(
+                        fvGroup[0].normal,
+                        fvGroup[fvGroup.size() - 2].normal, 
+                        fvGroup[fvGroup.size() - 1].normal
+                    )
                 );
                 // fanning like this only works on convex faces.
                 // concave faces require something more proper.
@@ -195,6 +235,8 @@ MeshRenderer MeshRenderer::loadFromObj(std::string objFname) {
 
     result.vertices = vs;
     result.triangles = tris;
+    result.texcoords = uvs;
+    result.vertexNormals = vns;
     result.meshName = _meshName;
 
     return result;

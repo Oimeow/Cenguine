@@ -7,16 +7,15 @@
 
 
 void testShader(Display &d) {
-    uint32_t width = d.W(), height = d.H();
+    const uint32_t width = d.W(), height = d.H();
 
     for (uint32_t y = 0; y < height; y++) {
-
         for (uint32_t x = 0; x < width; x++) {
             uint32_t r = 255*(x) / width;
             uint32_t g = 255*(height - y) / height;
             uint32_t b = 0;
         
-            d.putPixel(x, y, CColor(r,g,b,255));
+            d.putPixel(x, y, CColor(r,g,b));
         }
     }
 }
@@ -24,7 +23,7 @@ void testShader(Display &d) {
 void vertexRender(Display &d, const std::vector<glm::vec3>& vs) {
     for (int i = 0; i < vs.size(); i++) {
         Point2D p = project(vs[i], d.W(), d.H(), 90.0f);  // FOV Magic number...
-        // std::cout << "screen point:  (" << p.x << ", " << p.y << ")\n";
+
         if (p.z <= 0) {
             continue;
         }
@@ -38,18 +37,17 @@ void vertexRender(Display &d, const std::vector<glm::vec3>& vs) {
 
 void wireframeRenderBFC(Display& d, Object& obj, std::vector<uint32_t>& visibleTris) {
     const std::vector<glm::vec3>& wvs = obj.worldVerts;
+    const uint32_t width = d.W();
+    const uint32_t height = d.H();
 
     for (uint32_t i : visibleTris) {
         Tri tri = obj.meshRenderer.triangles[i];
 
-        glm::vec3 v1 = wvs[tri[0]], v2 = wvs[tri[1]], v3 = wvs[tri[2]];
+        glm::vec3 v1 = wvs[tri.vs[0]], v2 = wvs[tri.vs[1]], v3 = wvs[tri.vs[2]];
 
-        Point2D p1 = project(v1, d.W(), d.H(), 90.0f);
-        Point2D p2 = project(v2, d.W(), d.H(), 90.0f);
-        Point2D p3 = project(v3, d.W(), d.H(), 90.0f);
-
-        // std::cout << "line: "  << p1.x << "," << p1.y << " -> " << p2.x << "," << p2.y << "\n";
-
+        Point2D p1 = project(v1, width, height, 90.0f);
+        Point2D p2 = project(v2, width, height, 90.0f);
+        Point2D p3 = project(v3, width, height, 90.0f);
 
         if (p1.z > 0 && p2.z > 0)  d.drawBresenhamLine(p1, p2, CColor(0,200,0));
         if (p3.z > 0 && p1.z > 0)  d.drawBresenhamLine(p3, p1, CColor(0,200,0));
@@ -62,9 +60,9 @@ std::vector<uint32_t> cullBackFaces(Object& obj, Transform3D& tCamera, const std
 
     for (size_t i = 0; i < obj.meshRenderer.triangles.size(); i++) {
         Tri& tri = obj.meshRenderer.triangles[i];
-        glm::vec3 a = wvs[tri[0]], b = wvs[tri[1]], c = wvs[tri[2]];
+        glm::vec3 a = wvs[tri.vs[0]], b = wvs[tri.vs[1]], c = wvs[tri.vs[2]];
 
-        glm::vec3 normal = glm::cross(b-a, c-a);  // * -1 since left handed xyz system
+        glm::vec3 normal = glm::cross(b-a, c-a);
 
         if (glm::dot(normal, tCamera.pos - a) > 0) {
             frontFacingTriIdxs.emplace_back(i);
@@ -79,7 +77,7 @@ std::vector<uint32_t> cullBackFacesScreen(Object& obj, const std::vector<Point2D
 
     for (size_t i = 0; i < obj.meshRenderer.triangles.size(); i++) {
         Tri& tri = obj.meshRenderer.triangles[i];
-        Point2D a = projVs[tri[0]], b = projVs[tri[1]], c = projVs[tri[2]];
+        Point2D a = projVs[tri.vs[0]], b = projVs[tri.vs[1]], c = projVs[tri.vs[2]];
 
         int halfSigned2DArea = signedParallelogramArea(a,b,c);
 
@@ -108,9 +106,9 @@ void backfaceCullZCullRasterizeLight(Display &d, Object& obj, const std::vector<
 
         Tri& tri = triangles[i];
 
-        const Point2D p1 = projVs[tri[0]];
-        const Point2D p2 = projVs[tri[1]];
-        const Point2D p3 = projVs[tri[2]];
+        const Point2D p1 = projVs[tri.vs[0]];
+        const Point2D p2 = projVs[tri.vs[1]];
+        const Point2D p3 = projVs[tri.vs[2]];
 
         // back face culling
         const float area = signedParallelogramArea(p1, p2, p3);
@@ -142,9 +140,9 @@ void backfaceCullZCullRasterizeLight(Display &d, Object& obj, const std::vector<
         glm::vec3 zees{p1.z / area, p2.z / area, p3.z / area};
         // normalize zbuffer preparation by trigonal area.
 
-        glm::vec3 a = obj.worldVerts[tri[0]];
-        glm::vec3 b = obj.worldVerts[tri[1]];
-        glm::vec3 c = obj.worldVerts[tri[2]];
+        glm::vec3 a = obj.worldVerts[tri.vs[0]];
+        glm::vec3 b = obj.worldVerts[tri.vs[1]];
+        glm::vec3 c = obj.worldVerts[tri.vs[2]];
 
         glm::vec3 normal = glm::normalize(glm::cross(b-a, c-a));
 
@@ -201,9 +199,9 @@ void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t>& visibleTris, 
     for (uint32_t i : visibleTris) {
         Tri& tri = obj.meshRenderer.triangles[i];
 
-        Point2D p1 = projVs[tri[0]];
-        Point2D p2 = projVs[tri[1]];
-        Point2D p3 = projVs[tri[2]];
+        Point2D p1 = projVs[tri.vs[0]];
+        Point2D p2 = projVs[tri.vs[1]];
+        Point2D p3 = projVs[tri.vs[2]];
 
         int min_x = std::max(std::min({p1.x, p2.x, p3.x}), 0);
         int max_x = std::min(std::max({p1.x, p2.x, p3.x}), width - 1);
@@ -254,13 +252,13 @@ void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t>& visibleTris, 
 
 
 #pragma region OLD
-void wireframeRenderNaive(Display& d, Object& obj) {
+void wireframeRenderFull(Display& d, Object& obj) {
     std::vector<glm::vec3> vs = obj.worldVerts;
 
     for (size_t i = 0; i < obj.meshRenderer.triangles.size(); i++) {
         Tri& tri = obj.meshRenderer.triangles[i];
 
-        glm::vec3 v1 = vs[tri[0]], v2 = vs[tri[1]], v3 = vs[tri[2]];
+        glm::vec3 v1 = vs[tri.vs[0]], v2 = vs[tri.vs[1]], v3 = vs[tri.vs[2]];
 
         Point2D p1 = project(v1, d.W(), d.H(), 90.0f);
         Point2D p2 = project(v2, d.W(), d.H(), 90.0f);
