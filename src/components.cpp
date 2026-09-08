@@ -107,10 +107,8 @@ void MeshRenderer::initTriColors(Color col) {
     colors.clear();
     colors.reserve(triangles.size());
 
-    uint32_t color_int = colorToInt(col);
-
     for (Tri tri : triangles) {
-        colors.push_back(color_int);
+        colors.push_back(col);
     }
 }
 
@@ -124,12 +122,12 @@ void MeshRenderer::randomizeTriColors() {
         uint8_t g = rand() % 256;
         uint8_t b = rand() % 256;
         // std::cout << (r << 16 | g << 8 | b) << std::endl;
-        colors.push_back(i32rgba(r, g, b));
+        colors.push_back(Color(r, g, b, 255));
     }
 
     std::cout << std::endl;
-    for (auto color : colors) {
-        std::cout << color << std::endl;
+    for (auto &color : colors) {
+        std::cout << colorAsString(color) << std::endl;
     }
 
     assert(colors.size() == triangles.size());

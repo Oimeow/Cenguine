@@ -22,7 +22,7 @@ int main() {
         Object::instantiate("objs/stanford-bunny.obj",{0,0,1.1},glm::quat({1,0,0,0}), {5,5,5})
     };
 
-    DirectionalLight sun = DirectionalLight(Color(255, 255, 255), {0, 1, 0}, 1.0f);
+    DirectionalLight sun = DirectionalLight(Color(255, 255, 255,255), {0, 1, 0}, 1.0f);
 
     std::vector<Light*> lights {
         &sun
@@ -33,8 +33,8 @@ int main() {
     CCamera cam({0,0,0});
 
     for (auto& obj : activeScene.objects) {
-        obj.meshRenderer.initTriColors({255,255,255,255});
-        //obj.meshRenderer.randomizeTriColors();    
+        // obj.meshRenderer.initTriColors({255,255,255,255});
+        obj.meshRenderer.randomizeTriColors();    
     }
 
     while (!WindowShouldClose()) {
@@ -44,7 +44,7 @@ int main() {
 
         // clear
         // ClearBackground(BLACK); 
-        display.clearBuffers(0xff000000, MAXFLOAT);   
+        display.clearBuffers(BLACK, MAXFLOAT);   
 
         update(activeScene);  // run behaviours (update)
         shaders(display, activeScene, cam);  // run shaders
@@ -82,7 +82,7 @@ int shaders(Display &d, Scene& scene, CCamera& camera) {
         o.updateWorldVerts();
         const std::vector<glm::vec3>& worldVs = o.worldVerts;
 
-        o.debugObjectInformation();
+        // o.debugObjectInformation();
 
         std::vector<Point2D> projVs(worldVs.size());
         for (size_t i = 0; i < worldVs.size(); i++) {

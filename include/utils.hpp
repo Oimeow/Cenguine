@@ -110,6 +110,8 @@ uint32_t colorToInt(Color color);
 
 // debugging functions
 
-std::string vecAsString(glm::vec3 v);
+std::string vecAsString(const glm::vec3 &v);
 
-std::string quatAsString(glm::quat q);
+std::string quatAsString(const glm::quat &q);
+
+std::string colorAsString(const Color &c);

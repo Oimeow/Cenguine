@@ -26,7 +26,7 @@ Display::~Display() {
     UnloadTexture(framebufferTexture);
 }  // dtor
 
-void Display::clearFrameBuffer(uint32_t color) {
+void Display::clearFrameBuffer(Color color) {
     std::fill(framebuffer.begin(), framebuffer.end(), color);
 }
 
@@ -34,27 +34,27 @@ void Display::clearDepthBuffer(float defaultZ) {
     std::fill(zbuffer.begin(), zbuffer.end(), defaultZ);
 }
 
-void Display::clearBuffers(uint32_t color, float defaultZ) {
+void Display::clearBuffers(Color color, float defaultZ) {
     clearFrameBuffer(color);
     clearDepthBuffer(defaultZ);
 }
 
-void Display::putPixel(uint32_t x, uint32_t y, uint32_t color) {
+void Display::putPixel(uint32_t x, uint32_t y, Color color) {
     if (x < 0 || x >= width || y < 0 || y >= height) return;
 
     framebuffer[y*width + x] = color;
 }
-void Display::putPixel(Point2D p, uint32_t color) {
+void Display::putPixel(Point2D p, Color color) {
     if (p.x < 0 || p.x >= width || p.y < 0 || p.y >= height) return;
 
     framebuffer[p.y*width + p.x] = color;
 }
 
-void Display::setRowPixels(uint32_t y, const std::vector<uint32_t> &colors) {
+void Display::setRowPixels(uint32_t y, const std::vector<Color> &colors) {
     std::copy(colors.begin(), colors.end(), framebuffer.begin() + y * width);
 }
 
-void Display::drawBresenhamLine(Point2D a, Point2D b, uint32_t color) {
+void Display::drawBresenhamLine(Point2D a, Point2D b, Color color) {
     int dx = abs(b.x - a.x);
     int dy = abs(b.y - a.y);
 

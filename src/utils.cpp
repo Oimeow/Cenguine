@@ -43,10 +43,14 @@ uint32_t colorToInt(Color color) {
 
 // debugging tools
 
-std::string vecAsString(glm::vec3 v) {
+std::string vecAsString(const glm::vec3 &v) {
     return std::format("vec3({}, {}, {})", v.x, v.y, v.z);
 }
 
-std::string quatAsString(glm::quat q) {
+std::string quatAsString(const glm::quat &q) {
     return std::format("quat({}, {}, {}, {})", q.w, q.x, q.y, q.z);
+}
+
+std::string colorAsString(const Color &c) {
+    return std::format("Color(r = {},  g = {},  b = {},  a = {})", c.r, c.g, c.b, c.a);
 }

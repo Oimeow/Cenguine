@@ -14,7 +14,7 @@ public:
     std::vector<glm::vec3> vertices;
     std::vector<Tri> triangles;
     std::string meshName;
-    std::vector<uint32_t> colors;
+    std::vector<Color> colors;
 
     void initTriColors(Color col);
     void randomizeTriColors();
