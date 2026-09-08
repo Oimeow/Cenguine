@@ -28,7 +28,7 @@ Point2D project(const glm::vec3& v, const int w, const int h, const Projection& 
     return {xf, yf, v.z};
 }
 
-Color unpackColor(uint32_t color) {
+Color intToColor(uint32_t color) {
     uint8_t r = color & 0xff;
     uint8_t g = (color >> 8) & 0xff;
     uint8_t b = (color >> 16) & 0xff;
@@ -37,7 +37,7 @@ Color unpackColor(uint32_t color) {
     return Color(r, g, b, a);
 }
 
-uint32_t packColor(Color color) {
+uint32_t colorToInt(Color color) {
     return i32rgba(color.r, color.g, color.b, color.a);
 }
 

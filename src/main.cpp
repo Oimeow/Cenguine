@@ -12,7 +12,7 @@ int update(Scene &scene);
 int shaders(Display &d, Scene &scene, CCamera& camera);
 
 int main() {
-    int width = 500, height = 500, dS = 1;
+    int width = 1920, height = 1080, dS = 1;
 
     InitWindow(width*dS, height*dS, "Cenguine");
     Display display(width, height, dS, 0);
@@ -44,7 +44,7 @@ int main() {
 
         // clear
         // ClearBackground(BLACK); 
-        display.clear(0xff000000);   
+        display.clearBuffers(0xff000000, MAXFLOAT);   
 
         update(activeScene);  // run behaviours (update)
         shaders(display, activeScene, cam);  // run shaders
@@ -80,7 +80,7 @@ int shaders(Display &d, Scene& scene, CCamera& camera) {
 
     for (Object& o : scene.objects) {
         o.updateWorldVerts();
-        const auto& worldVs = o.worldVerts;
+        const std::vector<glm::vec3>& worldVs = o.worldVerts;
 
         o.debugObjectInformation();
 
@@ -94,14 +94,7 @@ int shaders(Display &d, Scene& scene, CCamera& camera) {
             projVs[i] = project(camV, width, height, fproj);
         }
 
-        cullAndRasterizeWithLighting(d, o, projVs, scene.lights);
-        // std::vector<uint32_t> visibleTris = cullBackFacesScreen(o, projVs);
-
-        // std::cout << "visible: " << visibleTris.size()
-        //   << " / " << o.meshRenderer.triangles.size() << '\n';
-
-        // rasterizeFill(d, o, visibleTris, projVs);
-        // vertexRender(d, worldVs);
+        backfaceCullZCullRasterizeLight(d, o, projVs, scene.lights);
     }
 
     return 0;

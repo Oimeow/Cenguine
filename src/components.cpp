@@ -107,7 +107,7 @@ void MeshRenderer::initTriColors(Color col) {
     colors.clear();
     colors.reserve(triangles.size());
 
-    uint32_t color_int = packColor(col);
+    uint32_t color_int = colorToInt(col);
 
     for (Tri tri : triangles) {
         colors.push_back(color_int);
@@ -191,7 +191,7 @@ MeshRenderer MeshRenderer::loadFromObj(std::string objFname) {
                     fvGroup[fvGroup.size() - 1].vertex
                 );
                 // fanning like this only works on convex faces.
-                // but note that all n_v=4 faces are convex.
+                // concave faces require something more proper.
             }
         }
     }

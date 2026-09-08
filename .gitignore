@@ -36,3 +36,4 @@ build/
 
 # Personal prefs
 .vscode/
+.DS_Store

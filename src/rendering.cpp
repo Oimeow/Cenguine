@@ -93,10 +93,11 @@ std::vector<uint32_t> cullBackFacesScreen(Object& obj, const std::vector<Point2D
     return frontFacingTriIdxs;
 }
 
-void cullAndRasterizeWithLighting(Display &d, Object& obj, const std::vector<Point2D>& projVs, const std::vector<Light*>& lights) {
+void backfaceCullZCullRasterizeLight(Display &d, Object& obj, const std::vector<Point2D>& projVs, const std::vector<Light*>& lights) {
     const int width = d.W();
     const int height = d.H();
-    uint32_t* framebuffer = d.data();
+    uint32_t* framebuffer = d.framebuffer.data();
+    float* zbuffer = d.zbuffer.data();
 
     std::vector<Tri>& triangles = obj.meshRenderer.triangles;
     const std::vector<uint32_t>& colors = obj.meshRenderer.colors;
@@ -109,33 +110,32 @@ void cullAndRasterizeWithLighting(Display &d, Object& obj, const std::vector<Poi
         const Point2D p2 = projVs[tri[1]];
         const Point2D p3 = projVs[tri[2]];
 
-        const int area = signedParallelogramArea(p1, p2, p3);
+        const float area = signedParallelogramArea(p1, p2, p3);
 
         if (area >= 0)  // dependent on winding order
             continue;
 
-        int min_x = std::max(std::min({p1.x, p2.x, p3.x}), 0);
-        int max_x = std::min(std::max({p1.x, p2.x, p3.x}), width - 1);
+        const int min_x = std::max(std::min({p1.x, p2.x, p3.x}), 0);
+        const int max_x = std::min(std::max({p1.x, p2.x, p3.x}), width - 1);
 
-        int min_y = std::max(std::min({p1.y, p2.y, p3.y}), 0);
-        int max_y = std::min(std::max({p1.y, p2.y, p3.y}), height - 1);
+        const int min_y = std::max(std::min({p1.y, p2.y, p3.y}), 0);
+        const int max_y = std::min(std::max({p1.y, p2.y, p3.y}), height - 1);
 
         if (min_x > max_x || min_y > max_y)  // absurdities
             continue;
 
-        int e1_dx = p2.y - p1.y;
-        int e2_dx = p3.y - p2.y;
-        int e3_dx = p1.y - p3.y;
-
-        int e1_dy = p1.x - p2.x;
-        int e2_dy = p2.x - p3.x;
-        int e3_dy = p3.x - p1.x;
+        const vec3i edge_dx{p2.y - p1.y,  p3.y - p2.y,  p1.y - p3.y};
+        const vec3i edge_dy{p1.x - p2.x,  p2.x - p3.x,  p3.x - p1.x};
 
         Point2D start{min_x, min_y};
 
-        int e1_row = signedParallelogramArea(p1, p2, start);
-        int e2_row = signedParallelogramArea(p2, p3, start);
-        int e3_row = signedParallelogramArea(p3, p1, start);
+        vec3i edgeRow{
+            signedParallelogramArea(p1, p2, start),
+            signedParallelogramArea(p2, p3, start),
+            signedParallelogramArea(p3, p1, start)
+        };
+        glm::vec3 zees{p1.z / area, p2.z / area, p3.z / area};
+        // normalize with area.
 
         uint32_t color = colors[i];
         glm::vec3 a = obj.worldVerts[tri[0]];
@@ -144,7 +144,7 @@ void cullAndRasterizeWithLighting(Display &d, Object& obj, const std::vector<Poi
 
         glm::vec3 normal = glm::normalize(glm::cross(b-a, c-a));
 
-        Color shaded = unpackColor(color);
+        Color shaded = intToColor(color);
 
         for (Light* l : lights) {
             if (auto* directional = dynamic_cast<DirectionalLight*>(l)) {
@@ -155,40 +155,35 @@ void cullAndRasterizeWithLighting(Display &d, Object& obj, const std::vector<Poi
 
                 float ambient = 0.5f;
 
-                float intensity = std::clamp(ambient + diffuse, 0.0f, 100.0f);
+                float intensity = std::max(ambient + diffuse, 0.0f);
 
                 shaded = shade(shaded, directional->color, intensity);
             }
         }
 
-
         for (int y = min_y; y <= max_y; y++) {
-            int e1 = e1_row,  e2 = e2_row,  e3 = e3_row;
+            vec3i edge = edgeRow;
 
-            uint32_t* pixel = framebuffer + y * width + min_x;
+            uint32_t* frameRowbuf = framebuffer + y * width;
+            float* zRowbuf = zbuffer + y * width;
 
             for (int x = min_x; x <= max_x; x++) {
-                const bool insideTriangle = e1 <= 0 && e2 <= 0 && e3 <= 0;
-                if (insideTriangle)
-                    *pixel = packColor(shaded);
+                const bool insideTriangle = edge[0] <= 0 && edge[1] <= 0 && edge[2] <= 0;
+                if (insideTriangle) {
+                    float zTest = vec3i::dot(edge, zees);
 
+                    if (*(zRowbuf + x) > zTest) {
+                        *(frameRowbuf + x) = colorToInt(shaded);
+                        *(zRowbuf + x) = zTest;
+                    }
+                }
                 // interpolation step
-
-                // lighting
-
-                
-                pixel++;
-
+                // TODO: lighting
                 // step a pixel to rightwards
-                e1 += e1_dx;
-                e2 += e2_dx;
-                e3 += e3_dx;
+                edge += edge_dx;
             }
-
             // move a pixel down
-            e1_row += e1_dy;
-            e2_row += e2_dy;
-            e3_row += e3_dy;
+            edgeRow += edge_dy;
         }
     }
 }
@@ -196,7 +191,7 @@ void cullAndRasterizeWithLighting(Display &d, Object& obj, const std::vector<Poi
 void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t>& visibleTris, const std::vector<Point2D>& projVs) {
     const int width = d.W();
     const int height = d.H();
-    uint32_t* framebuffer = d.data();
+    uint32_t* framebuffer = d.framebuffer.data();
 
     // rasterize
     for (uint32_t i : visibleTris) {

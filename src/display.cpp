@@ -8,7 +8,8 @@ Display::Display(uint32_t width, uint32_t height, int displayScale, int fpsCap)
     height(height),
     displayScale(displayScale),
     fpsCap(fpsCap),
-    framebuffer(width * height)
+    framebuffer(width * height),
+    zbuffer(width*height)
 {
     SetTargetFPS(fpsCap);
 
@@ -25,8 +26,17 @@ Display::~Display() {
     UnloadTexture(framebufferTexture);
 }  // dtor
 
-void Display::clear(uint32_t color) {
+void Display::clearFrameBuffer(uint32_t color) {
     std::fill(framebuffer.begin(), framebuffer.end(), color);
+}
+
+void Display::clearDepthBuffer(float defaultZ) {
+    std::fill(zbuffer.begin(), zbuffer.end(), defaultZ);
+}
+
+void Display::clearBuffers(uint32_t color, float defaultZ) {
+    clearFrameBuffer(color);
+    clearDepthBuffer(defaultZ);
 }
 
 void Display::putPixel(uint32_t x, uint32_t y, uint32_t color) {
@@ -74,9 +84,6 @@ void Display::drawBresenhamLine(Point2D a, Point2D b, uint32_t color) {
 
 }
 
-uint32_t* Display::data() {
-    return framebuffer.data();
-}
 
 void Display::renderFramebuffer() {
     UpdateTexture(framebufferTexture, framebuffer.data());

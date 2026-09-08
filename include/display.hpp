@@ -7,12 +7,17 @@
 
 class Display {
 public:
+    std::vector<uint32_t> framebuffer;  // ARGB * 8 bits per = 32 bits
+    std::vector<float> zbuffer;
 
     // ctor
     Display(uint32_t width, uint32_t height, int displayScale=1, int fpsCap=60);
     ~Display();
 
-    void clear(uint32_t color = 0);
+    void clearFrameBuffer(uint32_t color = 0xff000000);
+    void clearDepthBuffer(float defaultZ = MAXFLOAT);
+    
+    void clearBuffers(uint32_t color = 0xff000000, float defaultZ = MAXFLOAT);
 
     void putPixel(uint32_t x, uint32_t y, uint32_t color);
     void putPixel(Point2D p, uint32_t color);
@@ -20,8 +25,6 @@ public:
     void setRowPixels(uint32_t y, const std::vector<uint32_t> &colors);
     void drawBresenhamLine(Point2D a, Point2D b, uint32_t color);
 
-    // expose
-    uint32_t* data();
     uint32_t W() const { return width; }
     uint32_t H() const { return height; }
 
@@ -32,8 +35,6 @@ private:
     int displayScale;
     uint32_t width;
     uint32_t height;
-
-    std::vector<uint32_t> framebuffer;  // ARGB * 8 bits per = 32 bits
 
     Texture2D framebufferTexture;
 

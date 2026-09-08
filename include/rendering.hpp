@@ -21,7 +21,7 @@ std::vector<uint32_t> cullBackFacesScreen(Object& obj, const std::vector<Point2D
 
 void rasterizeFill(Display &d, Object& obj, std::vector<uint32_t>& visibleTris, const std::vector<Point2D>& projVs);
 
-void cullAndRasterizeWithLighting(Display &d, Object& obj, const std::vector<Point2D>& projVs, const std::vector<Light*>& lights);
+void backfaceCullZCullRasterizeLight(Display &d, Object& obj, const std::vector<Point2D>& projVs, const std::vector<Light*>& lights);
 
 Color shade(Color &material, Color &light, float &intensity);
 

@@ -59,6 +59,39 @@ struct Projection {
     float f;
 };
 
+struct vec3i {
+    int x;
+    int y;
+    int z;
+
+    vec3i(glm::vec3 v3) : x(v3.x), y(v3.y), z(v3.z)
+    {}
+    vec3i(int x, int y, int z) : x(x), y(y), z(z)
+    {}
+
+    static inline int dot(vec3i &a, vec3i &b) {
+        return a.x * b.x + a.y * b.y + a.z * b.z;
+    }
+    static inline float dot(vec3i &a, glm::vec3 &b) {
+        return a.x * b.x + a.y * b.y + a.z * b.z;  // i think this will auto-cast to float
+    }
+
+    int& operator[](size_t i) { return (&x)[i]; }
+
+    const int& operator[](size_t i) const { return (&x)[i]; }
+
+    vec3i operator+(const vec3i& v) const 
+    { return { x + v.x, y + v.y, z + v.z }; }
+
+    vec3i& operator+=(const vec3i& v) 
+    { 
+        x += v.x;  
+        y += v.y;  
+        z += v.z;
+        return *this;
+    }
+};
+
 // helper functions
 
 inline int signedParallelogramArea(Point2D a, Point2D b, Point2D p) {
@@ -71,9 +104,9 @@ Point2D project(const glm::vec3& v, const int w, const int h, const float fov, f
 
 Point2D project(const glm::vec3& v, const int w, const int h, const Projection& projection, float clippingPlane=0.01f);
 
-Color unpackColor(uint32_t color);
+Color intToColor(uint32_t color);
 
-uint32_t packColor(Color color);
+uint32_t colorToInt(Color color);
 
 // debugging functions
 
