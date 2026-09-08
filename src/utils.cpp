@@ -40,3 +40,13 @@ Color unpackColor(uint32_t color) {
 uint32_t packColor(Color color) {
     return i32rgba(color.r, color.g, color.b, color.a);
 }
+
+// debugging tools
+
+std::string vecAsString(glm::vec3 v) {
+    return std::format("vec3({}, {}, {})", v.x, v.y, v.z);
+}
+
+std::string quatAsString(glm::quat q) {
+    return std::format("quat({}, {}, {}, {})", q.w, q.x, q.y, q.z);
+}

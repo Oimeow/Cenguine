@@ -73,11 +73,15 @@ void Object::updateWorldVerts() {
 }
 
 void Object::debugObjectInformation() {
-    std::cout << "Object  :  Verts / Tris / Colors  :" << std::dec << 
-                meshRenderer.vertices.size() <<
-                meshRenderer.triangles.size() <<
+    std::cout << "==== Debug (" << meshRenderer.meshName << ") ====\n";
+    std::cout << "Verts / Tris / Colors  :  " << std::dec << 
+                meshRenderer.vertices.size() << " / " <<
+                meshRenderer.triangles.size() << " / " <<
                 meshRenderer.colors.size() <<
-                std::endl;
+                "\n";
+    std::cout << "pos | rot  :  " <<
+                vecAsString(pos) << " | " <<
+                quatAsString(rotation) << std::endl;
 }
 
 Object Object::instantiate(
@@ -98,6 +102,17 @@ Object Object::instantiate(
 
 
 // class MeshRenderer
+
+void MeshRenderer::initTriColors(Color col) {
+    colors.clear();
+    colors.reserve(triangles.size());
+
+    uint32_t color_int = packColor(col);
+
+    for (Tri tri : triangles) {
+        colors.push_back(color_int);
+    }
+}
 
 void MeshRenderer::randomizeTriColors() {
     colors.clear();

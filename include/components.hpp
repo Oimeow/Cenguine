@@ -16,6 +16,7 @@ public:
     std::string meshName;
     std::vector<uint32_t> colors;
 
+    void initTriColors(Color col);
     void randomizeTriColors();
     static MeshRenderer loadFromObj(std::string objFname);
 

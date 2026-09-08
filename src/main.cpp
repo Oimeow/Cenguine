@@ -15,11 +15,11 @@ int main() {
     int width = 500, height = 500, dS = 1;
 
     InitWindow(width*dS, height*dS, "Cenguine");
-    Display display(width, height, dS, 120);
+    Display display(width, height, dS, 0);
 
     std::vector<Object> objs {
         Object::instantiate("objs/cube.obj", {0,0,5}, glm::quat({0, 1, 1}), {2,2,2}),
-        Object::instantiate("objs/stanford-bunny.obj",{0,0,1.1},glm::quat(), {5,5,5})
+        Object::instantiate("objs/stanford-bunny.obj",{0,0,1.1},glm::quat({1,0,0,0}), {5,5,5})
     };
 
     DirectionalLight sun = DirectionalLight(Color(255, 255, 255), {0, 1, 0}, 1.0f);
@@ -33,8 +33,8 @@ int main() {
     CCamera cam({0,0,0});
 
     for (auto& obj : activeScene.objects) {
-        obj.meshRenderer.randomizeTriColors();
-        std::cout << "INITIALIZING  :  " << std::dec << obj.meshRenderer.colors.size() << std::endl;
+        obj.meshRenderer.initTriColors({255,255,255,255});
+        //obj.meshRenderer.randomizeTriColors();    
     }
 
     while (!WindowShouldClose()) {
@@ -64,8 +64,8 @@ int update(Scene& scene) {
     Object& o = scene.objects[0];
     float dt = (float)GetFrameTime();
     
-    o.translate({0,1*dt,0.5*dt});
-    o.localRotateEuler({dt, dt, dt/2});
+    o.translate({0,0,0.5*dt});
+    scene.objects[1].localRotateEuler({0, dt, 0});
 
     // std::cout << o.pos.x << ", " << o.pos.y << ", " << o.pos.z << std::endl;
 
@@ -81,6 +81,8 @@ int shaders(Display &d, Scene& scene, CCamera& camera) {
     for (Object& o : scene.objects) {
         o.updateWorldVerts();
         const auto& worldVs = o.worldVerts;
+
+        o.debugObjectInformation();
 
         std::vector<Point2D> projVs(worldVs.size());
         for (size_t i = 0; i < worldVs.size(); i++) {

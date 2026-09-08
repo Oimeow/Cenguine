@@ -4,6 +4,7 @@
 #include <glm/vec3.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include "raylib.h"
+#include <format>
 
 // macos stores uint32_t in little endian format (reverses order basically)
 // which means the value 0xAABBCCDD is stored in memory as 0xDDCCBBAA.
@@ -73,3 +74,9 @@ Point2D project(const glm::vec3& v, const int w, const int h, const Projection& 
 Color unpackColor(uint32_t color);
 
 uint32_t packColor(Color color);
+
+// debugging functions
+
+std::string vecAsString(glm::vec3 v);
+
+std::string quatAsString(glm::quat q);
